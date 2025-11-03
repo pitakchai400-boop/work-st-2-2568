@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบส่งงาน ออนไลน์</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- --- MODIFIED: Changed font to match Ex.html --- -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai+Looped:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            /* --- MODIFIED: Changed font to match Ex.html --- */
+            font-family: 'Noto Sans Thai Looped', sans-serif;
+            background-image: url('https://img5.pic.in.th/file/secure-sv1/-2bae623aeace54ecf.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .backdrop-blur-sm {
+            backdrop-filter: blur(4px);
+        }
+        .content-box {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .btn-primary {
+            background-color: #2563eb;
+            color: white;
+            transition: background-color: 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+        .btn-secondary {
+            background-color: #4b5563;
+            color: white;
+            transition: background-color: 0.3s;
+        }
+        .btn-secondary:hover {
+            background-color: #1f2937;
+        }
+        .swal2-popup {
+            /* --- MODIFIED: Changed font to match Ex.html --- */
+            font-family: 'Noto Sans Thai Looped', sans-serif;
+        }
+        /* --- NEW: ปรับขนาดฟอนต์หัวข้อกล่องรหัสผ่าน --- */
+        .swal2-title {
+            font-size: 1.5rem !important; /* 24px, เล็กลงจากเดิม */
+            padding-top: 0.5em !important;
+        }
+        /* --- MODIFIED: Professional Table Styling --- */
+        table th, table td {
+            padding: 10px 12px; /* MODIFIED: Tighter padding */
+            text-align: left;
+            vertical-align: top;
+            font-size: 0.875rem; /* MODIFIED: Set base font size (14px) */
+            word-break: break-word; /* MODIFIED: Handle long text */
+        }
+        table th {
+            background-color: #f3f4f6;
+            font-weight: 600; /* MODIFIED: Make headers slightly bolder */
+            color: #2563eb; /* NEW: ตั้งค่าสีข้อความหัวตารางเป็นสีธีม (น้ำเงิน) */
+        }
+        .score {
+            /* MODIFIED: font-size removed, will inherit from <td> */
+            font-weight: bold;
+            color: #1d4ed8;
+        }
+        .full-score {
+            /* MODIFIED: font-size removed, will inherit from <td> */
+            font-weight: bold;
+            color: #6b7280;
+        }
+        /* --- END MODIFIED --- */
+        .tab-btn {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            border-bottom-color: #2563eb;
+            color: #2563eb;
+            font-weight: 600;
+        }
+        /* Style for SweetAlert2 radio buttons */
+        .swal2-radio {
+            display: grid !important;
+            gap: .5em !important;
+        }
+        .swal2-radio label {
+            display: block;
+            padding: .5em;
+            border-radius: .25em;
+            text-align: left;
+        }
+        .swal2-radio input:checked+span {
+            font-weight: bold;
+        }
+         /* Custom styles for Swal form */
+        .swal-form-label {
+            display: block;
+            text-align: left;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 0.25rem;
+        }
+        .swal-form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d2d6dc;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .swal-form-input:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
+        }
+        .swal-form-input[readonly] {
+            background-color: #edf2f7;
+            cursor: not-allowed;
+        }
+        /* --- NEW (Req 2) --- */
+        .submission-images.hidden {
+            display: none;
+        }
+        .submission-images {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping */
+            gap: 0.5rem; /* 8px */
+            justify-content: flex-start; /* MODIFIED: Align images to the start (left) */
+            align-items: center;
+            margin-top: 0.5rem; /* 8px */
+        }
+        /* --- END NEW --- */
+        footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7); /* Lighter text for footer */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* Text shadow for better readability */
+            padding: 1rem;
+            background-color: rgba(0, 0, 0, 0.3); /* Slightly darker background for contrast */
+            border-radius: 8px;
+        }
+        
+        /* --- NEW: สีสถานะในตาราง Admin --- */
+        .status-select {
+            font-weight: 600;
+            transition: color 0.2s, background-color 0.2s;
+            border-radius: 0.375rem; /* 6px */
+            border-width: 1px;
+        }
+        .status-select[data-status="รอตรวจ"] {
+            color: #d97706; /* text-yellow-600 */
+            background-color: #fefce8; /* bg-yellow-50 */
+            border-color: #fde68a; /* border-yellow-200 */
+        }
+        .status-select[data-status="ตรวจแล้ว"] {
+            color: #16a34a; /* text-green-600 */
+            background-color: #f0fdf4; /* bg-green-50 */
+            border-color: #bbf7d0; /* border-green-200 */
+        }
+        .status-select[data-status="ส่งใหม่"] {
+            color: #dc2626; /* text-red-600 */
+            background-color: #fef2f2; /* bg-red-50 */
+            border-color: #fecaca; /* border-red-200 */
+        }
+        /* --- END NEW --- */
+
+        /* --- NEW: Professional Responsive Tables (Req 2) --- */
+        /* ทำให้ตารางแสดงผลเป็นการ์ดบนจอเล็ก (แบบเดียวกับที่ App มืออาชีพใช้) */
+        @media screen and (max-width: 768px) {
+            /* บังคับให้ตาราง, a, tbody, th, td, tr แสดงผลเป็น block */
+            table, thead, tbody, th, td, tr { 
+                display: block; 
+            }
+            
+            /* ซ่อนหัวตาราง (thead) แต่ยังคงอยู่เพื่อ Accessibility */
+            thead tr { 
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+            
+            tr { 
+                border: 1px solid #e5e7eb; /* border-gray-200 */
+                border-radius: 8px; 
+                margin-bottom: 1rem; 
+                background: white; 
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            
+            td { 
+                /* ทำให้ td ทำตัวเหมือน "แถว" */
+                border: none;
+                border-bottom: 1px solid #f3f4f6; /* border-gray-100 */
+                position: relative;
+                padding-left: 50% !important; /* เว้นที่สำหรับ data-label */
+                padding-top: 0.75rem !important;
+                padding-bottom: 0.75rem !important;
+                text-align: right !important; /* จัดเนื้อหาชิดขวา */
+                white-space: normal; /* ทำให้ข้อความตัดคำ */
+                word-break: break-word;
+                min-height: 48px; /* ความสูงขั้นต่ำ */
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+            }
+            
+            td:before { 
+                /* นี่คือส่วน "data-label" ที่เราจะเพิ่ม */
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                left: 1rem; /* padding-left: 1rem */
+                width: 45%; 
+                padding-right: 10px; 
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                text-align: left !important; /* จัดหัวข้อชิดซ้าย */
+                font-weight: 600;
+                color: #2563eb; /* NEW: สีน้ำเงินธีมตามที่ขอ */
+                font-size: 0.875rem;
+            }
+
+            /* --- กำหนด data-label ให้กับทุกตาราง --- */
+            
+            /* 1. ตาราง: รายการส่งงานของฉัน */
+            #my-submissions-table td:nth-of-type(1):before { content: "หัวข้องาน"; }
+            #my-submissions-table td:nth-of-type(2):before { content: "สถานะ"; }
+            #my-submissions-table td:nth-of-type(3):before { content: "คะแนน"; }
+            #my-submissions-table td:nth-of-type(4):before { content: "ภาพส่งงาน"; }
+            #my-submissions-table td:nth-of-type(5):before { content: "ไฟล์/ลิงค์"; }
+            #my-submissions-table td:nth-of-type(6):before { content: "เวลาที่ส่ง"; }
+
+            /* 2. ตาราง: รายการส่งงานของเพื่อน */
+            #class-submissions-table td:nth-of-type(1):before { content: "ชื่อ-สกุล"; }
+            #class-submissions-table td:nth-of-type(2):before { content: "หัวข้องาน"; }
+            #class-submissions-table td:nth-of-type(3):before { content: "สถานะ"; }
+            #class-submissions-table td:nth-of-type(4):before { content: "คะแนนที่ได้"; }
+            #class-submissions-table td:nth-of-type(5):before { content: "เวลาที่ส่ง"; }
+
+            /* 3. ตาราง: รายชื่อนักเรียน (Admin) */
+            #student-list-table td:nth-of-type(1):before { content: "เลขประจำตัว"; }
+            #student-list-table td:nth-of-type(2):before { content: "คำนำหน้า"; }
+            #student-list-table td:nth-of-type(3):before { content: "ชื่อ"; }
+            #student-list-table td:nth-of-type(4):before { content: "นามสกุล"; }
+            #student-list-table td:nth-of-type(5):before { content: "ระดับชั้น"; }
+            #student-list-table td:nth-of-type(6):before { content: "ห้อง"; }
+            #student-list-table td:nth-of-type(7):before { content: "จัดการ"; }
+            
+            /* 4. ตาราง: จัดการหัวข้องาน (Admin) */
+            #admin-assignments-table td { text-align: right !important; }
+            #admin-assignments-table td:nth-of-type(1) { display: none; } /* ซ่อน 'ลำดับ' บนมือถือ */
+            #admin-assignments-table td:nth-of-type(2):before { content: "หัวข้องาน"; }
+            #admin-assignments-table td:nth-of-type(3):before { content: "คะแนนเต็ม"; }
+            #admin-assignments-table td:nth-of-type(4):before { content: "จัดการ"; }
+            #admin-assignments-table .topic-input { width: 100%; }
+
+            /* 5. ตาราง: รายงานการส่งงาน (Admin) */
+            #report-table td:nth-of-type(1):before { content: "นักเรียน"; }
+            #report-table td:nth-of-type(2):before { content: "หัวข้องาน"; }
+            #report-table td:nth-of-type(3):before { content: "สถานะ"; }
+            #report-table td:nth-of-type(4):before { content: "คะแนน"; }
+            #report-table td:nth-of-type(5):before { content: "รายละเอียด"; }
+            #report-table td:nth-of-type(6):before { content: "เวลาที่ส่ง"; }
+            #report-table td:nth-of-type(7):before { content: "จัดการ"; }
+            
+            /* --- จัดการ input และ button ในตาราง --- */
+            td select, td input, td .flex {
+                display: inline-block; 
+                width: auto;
+                max-width: 100%;
+            }
+            td .flex { display: flex; justify-content: flex-end; gap: 0.5rem; }
+            td:before { vertical-align: middle; }
+            td .score-input { width: 5rem; }
+            /* REMOVED: .submission-images { justify-content: flex-end !important; } */
+        }
+        /* --- END Responsive Tables --- */
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Admin/Home Button Container -->
+    <div class="fixed top-4 right-4 z-50">
+        <button id="adminLoginBtn" title="ผู้ดูแลระบบ" class="bg-gray-800 text-white h-12 w-12 flex items-center justify-center rounded-full shadow-lg hover:bg-gray-700 transition duration-300">
+            <i class="fas fa-user-shield text-xl"></i>
+        </button>
+        <button id="backToHomeBtn" title="กลับหน้าแรก" class="hidden bg-blue-600 text-white h-12 w-12 flex items-center justify-center rounded-full shadow-lg hover:bg-blue-700 transition duration-300">
+            <i class="fas fa-home text-xl"></i>
+        </button>
+    </div>
+
+    <div class="container mx-auto p-4 md:p-8">
+        <!-- --- MODIFIED: Header styling updated to match Ex.html --- -->
+        <header class="text-center mb-8 content-box p-6 backdrop-blur-sm">
+            <!-- MODIFIED: Changed text, reduced size, and adjusted color for a professional feel -->
+            <h1 class="text-2xl md:text-3xl font-semibold text-gray-700">ระบบส่งงานออนไลน์ 🏫</h1>
+            <!-- MODIFIED: Reduced sub-header size -->
+            <p class="text-md md:text-lg text-gray-600 mt-2">ครูผู้สอน นายพิทักษ์ชัย ผายบึงแก้ว</p>
+            <p class="text-md md:text-lg text-gray-600 mt-2">โรงเรียนตระกาศประชาสามัคคี อ.กันทรลักษ์ จังหวัดศรีสะเกษ</p>
+        </header>
+        <!-- --- END MODIFIED --- -->
+
+        <!-- Student View -->
+        <main id="student-view" class="space-y-8">
+            <!-- Student Search -->
+            <section id="student-search-section" class="content-box p-6 backdrop-blur-sm">
+                <!-- MODIFIED: Reduced H2 size and changed color -->
+                <h2 class="text-xl font-semibold text-blue-700 mb-4">🔍 ค้นหาข้อมูลนักเรียน</h2>
+                <div class="flex flex-col md:flex-row gap-4">
+                    <input type="text" id="searchInput" placeholder="กรอกเลขประจำตัว หรือ ชื่อ-นามสุกล" class="flex-grow p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <!-- FIXED: Added the missing search button that caused the 'null' error -->
+                    <button id="searchBtn" class="btn-primary px-6 py-3 rounded-lg font-semibold">
+                        <i class="fas fa-search mr-2"></i>ค้นหา
+                    </button>
+                </div>
+            </section>
+
+            <!-- Student Info & Submission -->
+            <section id="student-info-section" class="hidden content-box p-6 backdrop-blur-sm">
+                <!-- MODIFIED: Reduced H2 size and changed color -->
+                <!-- NEW: Added flex wrapper for refresh button -->
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-blue-700">👤 ข้อมูลนักเรียน</h2>
+                    <button id="refresh-student-data-btn" title="รีเฟรชข้อมูล" class="text-blue-600 hover:text-blue-800 transition-colors p-2 rounded-full hover:bg-blue-100">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <!-- END NEW -->
+                <div id="student-details" class="mb-6 p-4 bg-blue-50 rounded-lg"></div>
+                
+                <!-- Submission Form -->
+                <div id="submission-form-container" class="mt-6 border-t pt-6">
+                    <!-- MODIFIED: Reduced H3 size -->
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">📤 ส่งงาน</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="assignment-select" class="block text-md font-medium text-gray-700 mb-1">เลือกหัวข้องาน:</label>
+                            <select id="assignment-select" class="w-full p-3 border border-gray-300 rounded-lg bg-white"></select>
+                        </div>
+                        <div>
+                            <label class="block text-md font-medium text-gray-700 mb-1">อัปโหลดไฟล์ (ไม่เกิน 3 ไฟล์):</label>
+                            <input type="file" id="file-upload" multiple accept="image/*, application/*, .pdf, .doc, .docx, .xls, .xlsx, .ppt, .pptx" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        </div>
+                         <div>
+                            <label for="link-upload" class="block text-md font-medium text-gray-700 mb-1">แนบลิงค์ (ถ้ามี):</label>
+                            <input type="url" id="link-upload" placeholder="https://example.com" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <!-- *** CHANGED ***: Grid layout for file previews -->
+                        <div id="file-preview" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+                        <button id="submitWorkBtn" class="w-full btn-primary py-3 rounded-lg font-bold text-lg">
+                            <i class="fas fa-paper-plane mr-2"></i>ส่งงาน
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Total Score Display -->
+                <div id="total-score-container" class="text-right mt-8 pt-6 border-t hidden">
+                    <!-- MODIFIED: Reduced H3 size and score size -->
+                    <h3 class="text-lg font-semibold text-gray-800">คะแนนรวม (ที่ตรวจแล้ว): 
+                        <span id="total-score" class="text-2xl font-bold text-blue-600">0</span> / 
+                        <span id="total-full-score" class="text-2xl font-bold text-gray-600">0</span> คะแนน
+                    </h3>
+                </div>
+
+                <!-- Student Submissions Tabs -->
+                <div class="mt-8">
+                    <div class="border-b border-gray-200">
+                        <nav id="student-submissions-tabs" class="flex space-x-4" aria-label="Tabs">
+                            <button class="tab-btn active" data-target="my-submissions-panel">
+                                <i class="fas fa-user-graduate mr-2"></i>รายการส่งงานของฉัน
+                            </button>
+                            <button class="tab-btn" data-target="class-submissions-panel">
+                               <i class="fas fa-users mr-2"></i>รายการส่งงานของเพื่อน
+                            </button>
+                        </nav>
+                    </div>
+                    <div class="pt-4">
+                        <!-- My Submissions Panel -->
+                        <div id="my-submissions-panel" class="student-tab-panel">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full bg-white rounded-lg shadow">
+                                    <thead>
+                                        <tr>
+                                            <th class="border-b-2">หัวข้องาน</th>
+                                            <th class="border-b-2 text-center">สถานะ</th>
+                                            <th class="border-b-2 text-center">คะแนน</th>
+                                            <!-- --- NEW (Req 1) --- -->
+                                            <th class="border-b-2 text-center">ภาพส่งงาน</th>
+                                            <!-- --- END NEW --- -->
+                                            <th class="border-b-2 text-center">ไฟล์/ลิงค์ที่ส่ง</th>
+                                            <th class="border-b-2 text-center">เวลาที่ส่ง</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="my-submissions-table"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- Class Submissions Panel -->
+                        <div id="class-submissions-panel" class="student-tab-panel hidden">
+                             <div class="flex items-center gap-4 mb-4">
+                                <label for="student-sort-select" class="font-medium">จัดเรียงข้อมูล:</label>
+                                <select id="student-sort-select" class="p-2 border rounded bg-white">
+                                    <option value="latest">ล่าสุดก่อน</option>
+                                    <option value="topic">ตามหัวข้องาน</option>
+                                    <option value="student">ตามชื่อนักเรียน</option>
+                                </select>
+                            </div>
+                             <div class="overflow-x-auto">
+                                <table class="min-w-full bg-white rounded-lg shadow">
+                                    <thead>
+                                        <tr>
+                                            <th class="border-b-2">ชื่อ-สกุล</th>
+                                            <th class="border-b-2">หัวข้องาน</th>
+                                            <th class="border-b-2">สถานะ</th>
+                                            <th class="border-b-2">คะแนนที่ได้</th>
+                                            <th class="border-b-2">เวลาที่ส่ง</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="class-submissions-table"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <!-- Admin View -->
+        <div id="admin-view" class="hidden space-y-8">
+            <div class="content-box backdrop-blur-sm">
+                <!-- Tabs Navigation -->
+                <div class="border-b border-gray-200">
+                    <nav id="admin-tabs" class="flex flex-wrap" aria-label="Tabs">
+                        <button class="tab-btn active" data-target="student-import-panel">
+                            <i class="fas fa-user-plus mr-2"></i>นำเข้าข้อมูลนักเรียน
+                        </button>
+                         <button class="tab-btn" data-target="student-list-panel">
+                           <i class="fas fa-address-book mr-2"></i>รายชื่อนักเรียน
+                        </button>
+                        <button class="tab-btn" data-target="assignment-management-panel">
+                            <i class="fas fa-tasks mr-2"></i>จัดการหัวข้องาน
+                        </button>
+                        <button class="tab-btn" data-target="submission-report-panel">
+                           <i class="fas fa-clipboard-check mr-2"></i>ตรวจงาน
+                        </button>
+                        <!-- NEW TAB -->
+                        <button class="tab-btn" data-target="student-report-panel">
+                           <i class="fas fa-book-reader mr-2"></i>รายงานส่งงานนักเรียน
+                        </button>
+                        <button class="tab-btn" data-target="database-link-panel">
+                            <i class="fas fa-database mr-2"></i>Link ฐานข้อมูล
+                        </button>
+                    </nav>
+                </div>
+                
+                <!-- Tab Panels -->
+                <div class="p-6">
+                    <!-- Student Import Panel -->
+                    <section id="student-import-panel" class="tab-panel">
+                        <!-- MODIFIED: Reduced H2 size and changed color -->
+                        <h2 class="text-xl font-semibold text-blue-700 mb-4">🧑‍🎓 นำเข้าข้อมูลนักเรียน</h2>
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <!-- Single Import -->
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-800 mb-3">นำเข้ารายบุคคล</h3>
+                                <form id="add-student-form" class="space-y-3">
+                                     <input type="number" name="studentId" placeholder="เลขประจำตัว" required class="w-full p-2 border rounded">
+                                     <select name="title" required class="w-full p-2 border rounded">
+                                        <option value="" disabled selected>-- เลือกคำนำหน้า --</option>
+                                        <option value="นาย">นาย</option>
+                                        <option value="นางสาว">นางสาว</option>
+                                     </select>
+                                     <input type="text" name="firstName" placeholder="ชื่อ" required class="w-full p-2 border rounded">
+                                     <input type="text" name="lastName" placeholder="นามสกุล" required class="w-full p-2 border rounded">
+                                     <select name="grade" required class="w-full p-2 border rounded">
+                                        <option value="" disabled selected>-- เลือกระดับชั้น --</option>
+                                        <option value="ม.4">ม.4</option>
+                                        <option value="ม.5">ม.5</option>
+                                        <option value="ม.6">ม.6</option>
+                                     </select>
+                                    <input type="number" name="class" placeholder="ห้อง (เช่น 1, 2, 3)" min="1" required class="w-full p-2 border rounded">
+                                    <button type="submit" class="w-full btn-primary py-2 rounded">บันทึกข้อมูลนักเรียน</button>
+                                </form>
+                            </div>
+                            <!-- Bulk Import -->
+                            <div>
+                                 <h3 class="text-lg font-medium text-gray-800 mb-3">นำเข้าจำนวนมาก (ไฟล์ .csv)</h3>
+                                 <p class="text-sm text-gray-500 mb-2">รูปแบบ: studentId,title,firstName,lastName,grade,class</p>
+                                 <input type="file" id="bulk-student-upload" accept=".csv" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                 <p class="text-xs text-red-600 mt-2 font-semibold">
+                                     <i class="fas fa-exclamation-triangle mr-1"></i>
+                                     สำคัญ: กรุณาบันทึกไฟล์ CSV ของคุณเป็นรูปแบบ "CSV UTF-8 (Comma delimited)" เพื่อให้แสดงผลภาษาไทยได้อย่างถูกต้อง
+                                 </p>
+                                 <button id="bulk-upload-btn" class="w-full mt-3 btn-secondary py-2 rounded">อัปโหลดและบันทึกข้อมูล</button>
+                            </div>
+                        </div>
+                    </section>
+                    
+                     <!-- Student List Panel -->
+                    <section id="student-list-panel" class="tab-panel hidden">
+                        <!-- MODIFIED: Reduced H2 size and changed color -->
+                        <h2 class="text-xl font-semibold text-blue-700 mb-4">📚 รายชื่อนักเรียน</h2>
+                        <div class="flex flex-wrap items-center gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                            <label for="student-list-grade-filter" class="font-medium">ระดับชั้น:</label>
+                            <select id="student-list-grade-filter" class="p-2 border rounded bg-white">
+                                <option value="all">-- ทุกระดับชั้น --</option>
+                                <option value="ม.4">ม.4</option>
+                                <option value="ม.5">ม.5</option>
+                                <option value="ม.6">ม.6</option>
+                            </select>
+                            <label for="student-list-class-filter" class="font-medium">ห้อง:</label>
+                            <select id="student-list-class-filter" class="p-2 border rounded bg-white" disabled>
+                                <option value="all">-- ทุกห้อง --</option>
+                            </select>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white rounded-lg shadow">
+                                <thead>
+                                    <tr>
+                                        <th class="border-b-2">เลขประจำตัว</th>
+                                        <th class="border-b-2">คำนำหน้า</th>
+                                        <th class="border-b-2">ชื่อ</th>
+                                        <th class="border-b-2">นามสกุล</th>
+                                        <th class="border-b-2">ระดับชั้น</th>
+                                        <th class="border-b-2">ห้อง</th>
+                                        <th class="border-b-2">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="student-list-table"></tbody>
+                            </table>
+                        </div>
+                    </section>
+                    
+                    <!-- Assignment Management Panel -->
+                    <section id="assignment-management-panel" class="tab-panel hidden">
+                        <!-- MODIFIED: Reduced H2 size and changed color -->
+                        <h2 class="text-xl font-semibold text-blue-700 mb-4">📝 จัดการหัวข้องาน</h2>
+                        <div class="flex items-center gap-4 mb-4">
+                            <label for="admin-grade-select" class="font-medium">ระดับชั้น:</label>
+                            <select id="admin-grade-select" class="p-2 border rounded" required>
+                                <option value="" disabled selected>-- เลือกระดับชั้น --</option>
+                                <option value="ม.4">ม.4</option>
+                                <option value="ม.5">ม.5</option>
+                                <option value="ม.6">ม.6</option>
+                            </select>
+                            <button id="admin-search-assignments-btn" class="btn-primary px-4 py-2 rounded">ค้นหา</button>
+                        </div>
+                        <div class="mt-4">
+                            <h3 class="text-lg font-medium">เพิ่มหัวข้องานใหม่</h3>
+                            <div class="flex flex-col md:flex-row gap-2 mt-2">
+                                 <input type="text" id="new-assignment-topic" placeholder="ชื่อหัวข้องาน" class="flex-grow p-2 border rounded">
+                                 <input type="number" id="new-assignment-score" placeholder="คะแนนเต็ม" class="w-full md:w-32 p-2 border rounded">
+                                 <button id="add-assignment-btn" class="btn-primary px-4 py-2 rounded">เพิ่ม</button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto mt-4">
+                             <table class="min-w-full bg-white rounded-lg shadow">
+                                 <thead><tr><th class="border-b-2 w-16">ลำดับ</th><th class="border-b-2">หัวข้องาน</th><th class="border-b-2">คะแนนเต็ม</th><th class="border-b-2">จัดการ</th></tr></thead>
+                                 <tbody id="admin-assignments-table"></tbody>
+                             </table>
+                        </div>
+                    </section>
+                    
+                    <!-- Submission Report Panel -->
+                    <section id="submission-report-panel" class="tab-panel hidden">
+                        <!-- MODIFIED: Reduced H2 size and changed color -->
+                        <h2 class="text-xl font-semibold text-blue-700 mb-4">📋 ตรวจงาน</h2>
+                         <div class="flex flex-wrap items-center gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                            <label for="report-grade-select" class="font-medium">ระดับชั้น:</label>
+                            <select id="report-grade-select" class="p-2 border rounded bg-white" required>
+                                <option value="" disabled selected>-- เลือกระดับชั้น --</option>
+                                <option value="ม.4">ม.4</option>
+                                <option value="ม.5">ม.5</option>
+                                <option value="ม.6">ม.6</option>
+                            </select>
+                            <button id="report-search-btn" class="btn-primary px-4 py-2 rounded">ดูรายงาน</button>
+                            <div class="w-full md:w-auto flex flex-wrap items-center gap-4 mt-4 md:mt-0 md:ml-auto">
+                                <label for="report-topic-filter" class="font-medium">หัวข้องาน:</label>
+                                <select id="report-topic-filter" class="p-2 border rounded bg-white">
+                                    <option value="all">-- ทุกหัวข้อ --</option>
+                                </select>
+                                <label for="report-class-filter" class="font-medium">ห้อง:</label>
+                                <select id="report-class-filter" class="p-2 border rounded bg-white">
+                                    <option value="all">-- ทุกห้อง --</option>
+                                </select>
+                                <button id="print-report-btn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                                    <i class="fas fa-print mr-2"></i>ปริ๊นรายงาน
+                                </button>
+                            </div>
+                        </div>
+                         <div class="overflow-x-auto">
+                             <table class="min-w-full bg-white rounded-lg shadow">
+                                 <thead>
+                                    <tr>
+                                        <th class="border-b-2">นักเรียน</th>
+                                        <th class="border-b-2">หัวข้องาน</th>
+                                        <th class="border-b-2">สถานะ</th>
+                                        <th class="border-b-2">คะแนน</th>
+                                        <!-- --- MODIFIED (Req 1) --- -->
+                                        <th class="border-b-2">รายละเอียด</th>
+                                        <!-- --- END MODIFIED --- -->
+                                        <th class="border-b-2">เวลาที่ส่ง</th>
+                                        <th class="border-b-2">จัดการ</th>
+                                    </tr>
+                                 </thead>
+                                 <tbody id="report-table"></tbody>
+                             </table>
+                        </div>
+                    </section>
+
+                    <!-- NEW STUDENT REPORT PANEL -->
+                    <section id="student-report-panel" class="tab-panel hidden">
+                        <h2 class="text-xl font-semibold text-blue-700 mb-4">📖 รายงานส่งงานนักเรียน (สรุป)</h2>
+                        
+                        <!-- Filters -->
+                        <div class="flex flex-wrap items-center gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                            <label for="student-report-grade-filter" class="font-medium">ระดับชั้น:</label>
+                            <select id="student-report-grade-filter" class="p-2 border rounded bg-white">
+                                <option value="all">-- ทุกระดับชั้น --</option>
+                                <option value="ม.4">ม.4</option>
+                                <option value="ม.5">ม.5</option>
+                                <option value="ม.6">ม.6</option>
+                            </select>
+                            <label for="student-report-class-filter" class="font-medium">ห้อง:</label>
+                            <select id="student-report-class-filter" class="p-2 border rounded bg-white" disabled>
+                                <option value="all">-- ทุกห้อง --</option>
+                            </select>
+                            <button id="student-report-refresh-btn" class="ml-auto bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow">
+                                <i class="fas fa-sync-alt mr-2"></i>รีเฟรชข้อมูล
+                            </button>
+                        </div>
+                        
+                        <!-- Table -->
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white rounded-lg shadow">
+                                <thead>
+                                    <tr>
+                                        <th class="border-b-2">เลขประจำตัว</th>
+                                        <th class="border-b-2">คำนำหน้า</th>
+                                        <th class="border-b-2">ชื่อ</th>
+                                        <th class="border-b-2">นามสกุล</th>
+                                        <th class="border-b-2">ชั้น</th>
+                                        <th class="border-b-2">ห้อง</th>
+                                        <th class="border-b-2">คะแนนรวม</th>
+                                        <th class="border-b-2">รายละเอียด</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="student-report-table"></tbody>
+                            </table>
+                        </div>
+                    </section>
+
+                     <!-- Database Link Panel -->
+                    <section id="database-link-panel" class="tab-panel hidden">
+                        <!-- MODIFIED: Reduced H2 size and changed color -->
+                        <h2 class="text-xl font-semibold text-blue-700 mb-4">🔗 Link ฐานข้อมูล</h2>
+                        <div class="p-6 bg-gray-50 rounded-lg border border-gray-200 space-y-4">
+                            <h3 class="text-lg font-medium text-gray-800">รายละเอียดฐานข้อมูล Google Sheet</h3>
+                            
+                            <a href="https://docs.google.com/spreadsheets/d/1KzhwbAs3jME00wa6fMJs7xHXaAEfOfQnroeV1HrSWd0/edit?usp=sharing" target="_blank" 
+                               class="inline-flex items-center justify-center w-full md:w-auto px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition duration-300">
+                                <i class="fas fa-table mr-3"></i>
+                                เปิดฐานข้อมูล
+                            </a>
+
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <p class="text-md font-medium text-gray-600">
+                                    <i class="fas fa-envelope mr-2 text-gray-400"></i>
+                                    <strong>อีเมลผู้สร้าง:</strong> g4779pitakchaiph@kurupatana.ac.th
+                                </p>
+                                <p class="text-md font-medium text-gray-600 mt-2">
+                        <i class="fas fa-folder-open mr-2 text-gray-400"></i>
+                        <strong>ที่อยู่ฐานข้อมูล:</strong> /11-App Sheet/ระบบส่งงานนักเรียน/ข้อมูลการส่งงานนักเรียน 2/2568/ข้อมูลส่งงานนักเรียน 2/2568
+                    </p>
+                    <p class="text-md font-medium text-gray-600 mt-2">
+                        <i class="fas fa-folder-open mr-2 text-gray-400"></i>
+                        <strong>ที่อยู่โฟลเดอร์เก็บข้อมูล:</strong> /11-App Sheet/ระบบส่งงานนักเรียน/ข้อมูลการส่งงานนักเรียน 2/2568/ไฟล์งานนักเรียนส่งงาน 2/2568 V2
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-12 text-center text-sm text-white-500 py-4">
+             Powered by: Gemini AI (Initial Code Generation)<br>
+             Implemented & Authored by: นายพิทักษ์ชัย ผายบึงแก้ว
+        </footer>
+    </div>
+
+<script>
+    // --- CONFIGURATION ---
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzUuBkKVCvw1DC6lBZL4ttoIsKQnGE5zZM2TuIIy6lYCHTUc9FTt6TXPHPkQxxz4PqT/exec";
+
+    // --- STATE ---
+    let currentUser = null;
+    let base64Files = [];
+    let currentClassSubmissions = [];
+    let currentReportData = { submissions: [], assignments: [], classes: [] };
+    let allStudentsCache = [];
+    // NEW: State for the new student report tab
+    let currentStudentReportData = { students: [], assignments: [], submissions: [] };
+
+
+    // --- DOM ELEMENTS ---
+    const studentView = document.getElementById('student-view');
+    const adminView = document.getElementById('admin-view');
+    const adminLoginBtn = document.getElementById('adminLoginBtn');
+    const backToHomeBtn = document.getElementById('backToHomeBtn');
+    const searchBtn = document.getElementById('searchBtn');
+    const searchInput = document.getElementById('searchInput');
+    const studentInfoSection = document.getElementById('student-info-section');
+    const studentDetails = document.getElementById('student-details');
+    const assignmentSelect = document.getElementById('assignment-select');
+    const fileUpload = document.getElementById('file-upload');
+    const linkUpload = document.getElementById('link-upload');
+    const filePreview = document.getElementById('file-preview');
+    const submitWorkBtn = document.getElementById('submitWorkBtn');
+    const mySubmissionsTable = document.getElementById('my-submissions-table');
+    const classSubmissionsTable = document.getElementById('class-submissions-table');
+    const totalScoreContainer = document.getElementById('total-score-container');
+    const totalScoreEl = document.getElementById('total-score');
+    const totalFullScoreEl = document.getElementById('total-full-score');
+    const studentSortSelect = document.getElementById('student-sort-select');
+    // Admin elements
+    const addStudentForm = document.getElementById('add-student-form');
+    const bulkUploadBtn = document.getElementById('bulk-upload-btn');
+    const bulkStudentUpload = document.getElementById('bulk-student-upload');
+    const adminSearchAssignmentsBtn = document.getElementById('admin-search-assignments-btn');
+    const adminAssignmentsTable = document.getElementById('admin-assignments-table');
+    const addAssignmentBtn = document.getElementById('add-assignment-btn');
+    const reportSearchBtn = document.getElementById('report-search-btn');
+    const reportTable = document.getElementById('report-table');
+    const adminTabs = document.getElementById('admin-tabs');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    const reportTopicFilter = document.getElementById('report-topic-filter');
+    const reportClassFilter = document.getElementById('report-class-filter');
+    const studentSubmissionsTabs = document.getElementById('student-submissions-tabs');
+    const studentTabPanels = document.querySelectorAll('.student-tab-panel');
+    const printReportBtn = document.getElementById('print-report-btn');
+    const studentListTable = document.getElementById('student-list-table');
+    const studentListGradeFilter = document.getElementById('student-list-grade-filter');
+    const studentListClassFilter = document.getElementById('student-list-class-filter');
+    // NEW: Student Report Tab elements
+    const studentReportGradeFilter = document.getElementById('student-report-grade-filter');
+    const studentReportClassFilter = document.getElementById('student-report-class-filter');
+    const studentReportRefreshBtn = document.getElementById('student-report-refresh-btn');
+    const studentReportTable = document.getElementById('student-report-table');
+    // NEW: Refresh button
+    const refreshStudentDataBtn = document.getElementById('refresh-student-data-btn');
+
+
+    // --- API HELPER (MODIFIED: Professional Error Handling, Req 3) ---
+    async function apiCall(action, payload = {}) {
+        const url = SCRIPT_URL;
+        const options = {
+            method: 'POST',
+            mode: 'cors',
+            redirect: 'follow',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action, ...payload }),
+        };
+
+        let response;
+        try {
+            response = await fetch(url, options);
+        } catch (networkError) {
+            console.error(`Network error during action "${action}":`, networkError);
+            // ถ้า 'Failed to fetch' ให้โยนข้อผิดพลาดภาษาไทยที่ชัดเจน
+            if (networkError.message.includes('Failed to fetch')) {
+                 throw new Error('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาตรวจสอบอินเทอร์เน็ต หรือการตั้งค่า CORS ของสคริปต์');
+            }
+            throw new Error(`เกิดข้อผิดพลาดเครือข่าย: ${networkError.message}`);
+        }
+
+        // ตรวจสอบว่า Server ตอบกลับมาว่า OK (status 200-299) หรือไม่
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Server error (Status ${response.status}) during action "${action}":`, errorText);
+            throw new Error(`เซิร์ฟเวอร์ขัดข้อง (Status: ${response.status}). กรุณาลองใหม่อีกครั้ง`);
+        }
+
+        // ลองแปลง JSON
+        let result;
+        try {
+            result = await response.json();
+        } catch (jsonError) {
+            console.error(`JSON parsing error during action "${action}":`, jsonError);
+            throw new Error('เซิร์ฟเวอร์ส่งข้อมูลกลับมาในรูปแบบที่ไม่ถูกต้อง (JSON Error)');
+        }
+
+        // ตรวจสอบ Application-level error (ที่กำหนดใน Google Apps Script)
+        // (เราคาดหวังว่า GAS จะส่ง status: 'success' หรือ status: 'error')
+        if (result.status !== 'success') {
+            console.error(`Application error during action "${action}":`, result.message || result.error);
+            // จัดการเคส "ไม่พบนักเรียน" เป็นพิเศษ (ไม่ถือว่า Error)
+            if (result.message === "ไม่พบข้อมูลนักเรียน") {
+                return { status: 'success', data: [] }; 
+            }
+            // โยนข้อความ Error ที่ Server ส่งมา
+            throw new Error(result.message || result.error || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุบนเซิร์ฟเวอร์');
+        }
+        
+        // ถ้าทุกอย่างผ่าน
+        return result; 
+    }
+    // --- END API HELPER ---
+
+
+    // --- RENDERING & HELPER FUNCTIONS ---
+    const isValidUrl = string => { try { new URL(string); return true; } catch (_) { return false; } };
+    const renderStatus = status => `<span class="px-2 py-1 text-sm font-medium rounded-full ${{'รอตรวจ':'bg-yellow-100 text-yellow-800','ตรวจแล้ว':'bg-green-100 text-green-800','ส่งใหม่':'bg-red-100 text-red-800', 'ยังไม่ส่ง':'bg-gray-100 text-gray-500'}[status] || 'bg-gray-100 text-gray-800'}">${status}</span>`;
+    // --- MODIFIED: อัปเดตรูปแบบวันที่และเวลาเป็น พ.ศ. และโซนเวลาไทย ---
+    const formatTimestamp = isoString => isoString ? new Intl.DateTimeFormat('th-TH', { year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:false, calendar: 'buddhist', timeZone: 'Asia/Bangkok' }).format(new Date(isoString)).replace(',','') : '-';
+
+    // --- NEW HELPER FUNCTIONS (Req 4) ---
+    /**
+     * Converts a Google Drive share URL to a direct image content URL.
+     * @param {string} url The Google Drive share URL
+     * @returns {string} The direct content URL
+     */
+    function getGoogleDriveImageUrl(url) {
+        // --- *** PROFESSIONAL FIX (From Ex.html) *** ---
+        if (!url || typeof url !== 'string' || !url.includes('drive.google.com')) {
+            return url; // Not a GDrive URL or invalid
+        }
+        
+        let fileId = null;
+        try {
+            // 1. Try matching the modern format: /file/d/FILE_ID/...
+            let match = url.match(/file\/d\/([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) {
+                fileId = match[1];
+            } else {
+                // 2. Try matching the older format: open?id=FILE_ID
+                match = url.match(/open\?id=([a-zA-Z0-9_-]+)/);
+                if (match && match[1]) {
+                    fileId = match[1];
+                }
+            }
+
+            if (fileId) {
+                // *** THE CRITICAL CHANGE IS HERE ***
+                // Use /thumbnail?id= (from Ex.html) instead of /uc?id=
+                // This is the stable endpoint for thumbnails.
+                return `https://drive.google.com/thumbnail?id=${fileId}&sz=w256`;
+            } else {
+                // If no ID was found, return the original URL
+                console.warn(`Could not extract File ID from Google Drive URL: ${url}`);
+                return url;
+            }
+        } catch (e) {
+            console.warn(`Error parsing Google Drive URL: ${url}`, e);
+            return url; // Return original URL on error
+        }
+        // --- *** END OF PROFESSIONAL FIX *** ---
+    }
+
+    // --- NEW: Professional Image Preview (Req 1) ---
+    /**
+     * แสดงรูปภาพใน Modal สวยงาม (แบบ Ex.html)
+     * @param {string} url - URL ของรูปภาพ
+     * @param {string} title - คำอธิบายรูปภาพ
+     */
+    function showImagePreview(url, title = 'ดูภาพขยาย') {
+        // ดึง URL รูปภาพต้นฉบับโดยการลบ/แทนที่พารามิเตอร์ขนาด
+        // เพื่อให้ได้ภาพที่ชัดที่สุดใน Modal
+        let directUrl = getGoogleDriveImageUrl(url);
+        // ร้องขอภาพขนาดใหญ่ขึ้นสำหรับ Modal
+        directUrl = directUrl.replace(/&sz=w256/g, '&sz=w1280'); 
+
+        Swal.fire({
+            title: title,
+            imageUrl: directUrl,
+            imageAlt: title,
+            imageWidth: '90%', // แสดงผลเกือบเต็มความกว้าง
+            imageHeight: 'auto', // ความสูงอัตโนมัติ
+            width: 'auto', // ความกว้าง Modal อัตโนมัติ
+            padding: '0.5em', // ลด padding
+            background: '#fff',
+            showConfirmButton: false, // ซ่อนปุ่ม OK
+            showCloseButton: true, // แสดงปุ่ม X
+            backdrop: `rgba(0,0,0,0.8)` // พื้นหลังสีเข้ม
+        });
+    }
+    // --- END NEW HELPER ---
+
+
+    /**
+     * Renders a file link. If it's an image, shows a thumbnail.
+     * If not, shows a text link.
+     * @param {object} file - The file object { url, name }
+     * @returns {string} HTML string
+     */
+    function renderFileLink(file, isForImageList = false) {
+        // --- MODIFIED (Req 3): Robust Image Detection ---
+        if (!file || !file.url) return ''; // Safety check
+
+        const imageFilterRegex = /\.(jpe?g|png|gif|webp)$/i;
+        let isImage = false;
+        let fileName = file.name || ""; // Ensure name is a string
+
+        // 1. Check name
+        if (fileName && imageFilterRegex.test(fileName)) {
+            isImage = true;
+        } 
+        // 2. If name fails, check URL (This is the professional fix)
+        // Check for GDrive links OR image file extensions in the URL itself
+        else if (file.url.includes('drive.google.com/file/d/') || file.url.includes('drive.google.com/open?id=') || imageFilterRegex.test(file.url)) {
+            isImage = true;
+            if (!fileName) {
+                fileName = "image_file.jpg"; // Assign default name if missing
+            }
+        }
+        // --- END MODIFIED ---
+
+        if (isImage) {
+            // --- MODIFIED (Req 1 & 3): เปลี่ยนจาก <a> เป็น <img> ที่มี onclick ---
+            const imgClass = isForImageList 
+                ? "h-28 w-28 object-cover rounded-lg border-2 border-gray-200 hover:border-blue-400 transition-all shadow-sm" // MODIFIED: Made bigger (h-24->h-28) and added shadow
+                : "h-16 w-16 object-cover inline-block rounded border border-gray-300 hover:opacity-80"; // Original style (no longer used in report)
+            
+            const cleanTitle = file.name ? file.name.replace(/'/g, "\\'") : 'รูปภาพ'; // ป้องกัน ' ทำลาย String
+
+            // เปลี่ยนเป็น <img> (หรือ button) ที่มี onclick ไปหา showImagePreview
+            return `<img src="${getGoogleDriveImageUrl(file.url)}" 
+                         alt="${fileName}" 
+                         class="${imgClass}"
+                         style="cursor: pointer;"
+                         title="คลิกเพื่อดูภาพขยาย: ${fileName}"
+                         onclick="showImagePreview('${file.url}', '${cleanTitle}')"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+                    <span style="display:none;" class="text-blue-600 hover:underline">[Image: ${fileName}]</span>`;
+            // --- END MODIFIED ---
+        }
+        // Fallback for non-images
+        return `<a href="${file.url}" target="_blank" class="text-blue-600 hover:underline block">${fileName}</a>`;
+    }
+    // --- END NEW HELPER FUNCTIONS ---
+
+    // --- EVENT LISTENERS ---
+    adminLoginBtn.addEventListener('click', () => {
+        Swal.fire({
+            title: 'รหัสผ่านผู้ดูแลระบบ',
+            input: 'password',
+            inputAttributes: { autocapitalize: 'off' },
+            showCancelButton: true,
+            confirmButtonText: 'เข้าสู่ระบบ',
+            cancelButtonText: 'ยกเลิก',
+            showLoaderOnConfirm: true,
+            preConfirm: async (password) => {
+                try {
+                    // --- MODIFIED (Req 3): ใช้ apiCall ที่ปรับปรุงใหม่ ---
+                    // ไม่ต้องทำ .json() หรือ .ok ที่นี่แล้ว apiCall จัดการให้หมด
+                    await apiCall('validateAdmin', { password });
+                    return true;
+                } catch (error) {
+                    // --- MODIFIED: Professional Error Handling (Req 3) ---
+                    // error.message จะมาจาก throw new Error(...) ใน apiCall
+                    // ซึ่งเป็นข้อความที่ชัดเจนอยู่แล้ว
+                    const errorMessage = error.message || 'รหัสผ่านไม่ถูกต้อง หรือเกิดข้อผิดพลาดไม่ทราบสาเหตุ';
+                    Swal.showValidationMessage(errorMessage);
+                    // --- END MODIFIED ---
+                    return false;
+                }
+            },
+            allowOutsideClick: () => !Swal.isLoading()
+        }).then(result => {
+            if (result.isConfirmed) {
+                studentView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+                adminLoginBtn.classList.add('hidden');
+                backToHomeBtn.classList.remove('hidden');
+            }
+        });
+    });
+
+    backToHomeBtn.addEventListener('click', () => {
+        adminView.classList.add('hidden'); studentView.classList.remove('hidden');
+        backToHomeBtn.classList.add('hidden'); adminLoginBtn.classList.remove('hidden');
+    });
+
+    async function selectStudent(student) {
+        currentUser = student;
+        studentInfoSection.classList.remove('hidden');
+        studentDetails.innerHTML = `<p><strong>เลขประจำตัว:</strong> ${currentUser.studentId}</p><p><strong>ชื่อ:</strong> ${currentUser.title}${currentUser.firstName} ${currentUser.lastName}</p><p><strong>ระดับชั้น:</strong> ${currentUser.grade} ห้อง ${currentUser.class}</p>`;
+        await loadStudentData(); 
+    }
+
+    searchBtn.addEventListener('click', async () => {
+        const query = searchInput.value.trim();
+        if (!query) { Swal.fire('ผิดพลาด', 'กรุณากรอกข้อมูลเพื่อค้นหา', 'warning'); return; }
+        Swal.fire({ title: 'กำลังค้นหา...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        try {
+            const { data: foundStudents } = await apiCall('searchStudent', { query });
+
+            if (!foundStudents || foundStudents.length === 0) {
+                Swal.fire('ไม่พบข้อมูล', 'ไม่พบข้อมูลนักเรียนที่ตรงกับคำค้นหาของคุณ', 'info');
+                studentInfoSection.classList.add('hidden');
+            } else if (foundStudents.length === 1) {
+                await selectStudent(foundStudents[0]);
+                Swal.close();
+            } else {
+                const inputOptions = {};
+                foundStudents.forEach(s => inputOptions[JSON.stringify(s)] = `${s.title}${s.firstName} ${s.lastName} (ม.${s.grade}/${s.class}, เลข: ${s.studentId})`);
+
+                const { value: selected } = await Swal.fire({
+                    title: 'พบนักเรียนหลายคน', text: 'กรุณาเลือกนักเรียนที่ถูกต้อง:', input: 'radio',
+                    inputOptions, inputValidator: v => !v && 'คุณต้องเลือกนักเรียน!',
+                    confirmButtonText: 'ยืนัน', showCancelButton: true, cancelButtonText: 'ยกเลิก',
+                });
+                selected ? await selectStudent(JSON.parse(selected)) : Swal.close();
+            }
+        } catch (error) {
+            Swal.fire('เกิดข้อผิดพลาด', error.message, 'error');
+            studentInfoSection.classList.add('hidden');
+        }
+    });
+
+    searchInput.addEventListener('keypress', e => e.key === 'Enter' && searchBtn.click());
+    
+    // NEW: Event listener for the refresh button
+    refreshStudentDataBtn.addEventListener('click', () => {
+        if (currentUser) {
+            // Just call the existing function to reload all data for the current user
+            loadStudentData();
+        } else {
+            Swal.fire('ผิดพลาด', 'ไม่พบข้อมูลนักเรียน (currentUser is null)', 'error');
+        }
+    });
+
+    // Renders the class submissions table based on the selected sort option
+    function renderClassSubmissions() {
+        const sortBy = studentSortSelect.value;
+        const sortedData = [...currentClassSubmissions]; // Create a copy to sort
+
+        if (sortBy === 'topic') {
+            sortedData.sort((a, b) => a.assignmentTopic.localeCompare(b.assignmentTopic) || new Date(b.timestamp) - new Date(a.timestamp));
+        } else if (sortBy === 'student') {
+            sortedData.sort((a, b) => a.studentName.localeCompare(b.studentName) || new Date(b.timestamp) - new Date(a.timestamp));
+        } // 'latest' is the default from the API
+        
+        classSubmissionsTable.innerHTML = sortedData.length > 0
+            ? sortedData.map(s => `
+                <tr class="border-t">
+                    <td>${s.studentName}</td>
+                    <td>${s.assignmentTopic}</td>
+                    <td>${renderStatus(s.status)}</td>
+                    <td><span class="font-bold">${s.score || '-'}</span> / ${s.fullScore || 100}</td>
+                    <td>${formatTimestamp(s.timestamp)}</td>
+                </tr>`).join('')
+            : '<tr><td colspan="5" class="text-center py-4 text-gray-500">ไม่พบข้อมูลการส่งงานของเพื่อนในระดับชั้น</td></tr>';
+    }
+    
+    studentSortSelect.addEventListener('change', renderClassSubmissions);
+
+    async function loadStudentData() {
+        if (!currentUser) return;
+        Swal.fire({ title: 'กำลังโหลดข้อมูล...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+            const [assignmentsResult, mySubmissionsResult, classSubmissionsResult] = await Promise.all([
+                apiCall('getAssignments', { grade: currentUser.grade }),
+                apiCall('getSubmissions', { studentId: currentUser.studentId }),
+                apiCall('getSubmissions', { grade: currentUser.grade })
+            ]);
+
+            const assignments = assignmentsResult.data || [];
+            const mySubmissions = mySubmissionsResult.data || [];
+            currentClassSubmissions = classSubmissionsResult.data || [];
+            
+            assignmentSelect.innerHTML = assignments.map(a => `<option value="${a.id}">${a.topic} (เต็ม ${a.fullScore || 100} คะแนน)</option>`).join('');
+            assignmentSelect.insertAdjacentHTML('afterbegin', '<option value="">-- เลือกหัวข้อ --</option>');
+
+            const finalSubmissionsMap = new Map();
+            const subsByAssignment = mySubmissions.reduce((acc, sub) => (acc[sub.assignmentId] = [...(acc[sub.assignmentId] || []), sub], acc), {});
+            for (const assignmentId in subsByAssignment) {
+                const group = subsByAssignment[assignmentId];
+                const graded = group.filter(s => s.status === 'ตรวจแล้ว');
+                if (graded.length > 0) {
+                    graded.sort((a, b) => (parseInt(b.score,10)||0) - (parseInt(a.score,10)||0) || new Date(b.timestamp) - new Date(a.timestamp));
+                    finalSubmissionsMap.set(assignmentId, graded[0]);
+                } else {
+                    group.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    finalSubmissionsMap.set(assignmentId, group[0]);
+                }
+            }
+            
+            // --- START MODIFICATION ---
+            let totalScore = 0, totalFullScore = 0;
+
+            // เราจะวนลูปจาก "หัวข้องานที่มีอยู่" (assignments) เป็นหลัก
+            // เพื่อให้แน่ใจว่าเราจะไม่นับคะแนนจากงานที่ถูกลบไปแล้ว
+            assignments.forEach(a => {
+                // 1. เพิ่มคะแนนเต็มของหัวข้องานนี้เข้าไปในคะแนนเต็มรวม
+                totalFullScore += parseInt(a.fullScore, 10) || 0;
+                
+                // 2. ค้นหางานที่นักเรียนส่ง (ที่ดีที่สุด) สำหรับหัวข้องานนี้
+                const sub = finalSubmissionsMap.get(a.id);
+                
+                // 3. ถ้านักเรียนส่งงาน, งานตรวจแล้ว, และมีคะแนน
+                if (sub && sub.status === 'ตรวจแล้ว' && sub.score) {
+                    // ให้บวกคะแนนนั้นเข้ากับคะแนนรวม
+                    totalScore += parseInt(sub.score, 10);
+                }
+            });
+            // --- END MODIFICATION ---
+            
+            totalScoreEl.textContent = totalScore;
+            totalFullScoreEl.textContent = totalFullScore;
+            totalScoreContainer.classList.remove('hidden');
+
+            mySubmissionsTable.innerHTML = assignments.length > 0 ? assignments.map(a => {
+                const sub = finalSubmissionsMap.get(a.id);
+                if (sub) {
+                    // --- NEW (Req 1 & 2) ---
+                    const allFiles = sub.files || [];
+                    
+                    // --- MODIFIED: Added robustness check for file name ---
+                    const imageFilterRegex = /\.(jpe?g|png|gif|webp)/i; // Removed $ to check URLs too
+                    
+                    const imageFiles = allFiles.filter(f => {
+                        if (!f || !f.url) return false; // Must have a URL
+                        
+                        // 1. Check name first (reliable)
+                        if (f.name && typeof f.name === 'string' && imageFilterRegex.test(f.name)) {
+                            return true;
+                        }
+                        
+                        // 2. If name fails, check URL (backup)
+                        // This checks for file extensions in the URL or Google Drive content links
+                        // --- *** PROFESSIONAL FIX HERE *** ---
+                        if (typeof f.url === 'string' && (imageFilterRegex.test(f.url) || f.url.includes('drive.google.com/file/d/') || f.url.includes('drive.google.com/open?id='))) {
+                            // If name is missing, create a fallback
+                            if (!f.name || typeof f.name !== 'string' || f.name.trim() === "") {
+                                f.name = "image_file.jpg"; // Provide a default name
+                            }
+                            return true;
+                        }
+                        return false; // Not an image
+                    });
+
+                    const otherFiles = allFiles.filter(f => {
+                        // A file is "other" if it's NOT in the imageFiles list.
+                        // We use includes() for safety, checking the original object.
+                        return !imageFiles.includes(f);
+                    });
+                    // --- END MODIFIED ---
+                    
+                    const link = sub.link ? `<a href="${sub.link}" target="_blank" class="text-indigo-600 hover:underline block">[ลิงค์]</a>` : '';
+                    
+                    // Render images with new "professional" style flag
+                    const imageFilesHtml = imageFiles.map(f => renderFileLink(f, true)).join(' '); 
+                    // Render other files with default style
+                    const otherFilesHtml = otherFiles.map(f => renderFileLink(f, false)).join(' ');
+
+                    return `<tr class="border-t">
+                                <td>${a.topic}</td>
+                                <td class="text-center">${renderStatus(sub.status)}</td>
+                                <td class="text-center"><span class="score">${sub.score||'-'}</span> <span class="full-score">/ ${a.fullScore||100}</span></td>
+                                
+                                <!-- NEW COLUMN (Req 1 & 2) -->
+                                <td class="text-center pt-3">
+                                    ${imageFiles.length > 0 ? `
+                                        <!-- MODIFIED (Req 1): Emoji-only button -->
+                                        <button class="toggle-images-btn text-xl p-2 rounded-lg hover:bg-gray-200 transition-colors" title="แสดง/ซ่อนรูปภาพ (${imageFiles.length} รูป)"> <!-- MODIFIED: text-2xl to text-xl -->
+                                            📷 <!-- MODIFIED (Req 2): Changed Emoji -->
+                                        </button>
+                                        <div class="submission-images hidden">
+                                            ${imageFilesHtml}
+                                        </div>
+                                    ` : '<span class="text-xs text-gray-400">-</span>'}
+                                </td>
+    
+                                <!-- ORIGINAL FILE/LINK COLUMN (MODIFIED) -->
+                                <td class="text-center pt-3">
+                                    <div class="flex flex-col gap-1 justify-center items-center">${otherFilesHtml} ${link}</div>
+                                </td>
+                                
+                                <td class="text-center pt-3">${formatTimestamp(sub.timestamp)}</td> <!-- MODIFIED: Removed text-sm -->
+                            </tr>`;
+                    // --- END NEW ---
+                }
+                // --- MODIFIED (Req 1): Added extra <td> for new column ---
+                return `<tr class="border-t bg-gray-50"><td>${a.topic}</td><td class="text-center text-red-500 font-bold">❌</td><td class="text-center text-red-500 font-bold">❌</td><td class="text-center text-red-500 font-bold">❌</td><td class="text-center text-red-500 font-bold">❌</td><td class="text-center">-</td></tr>`; // MODIFIED: Removed text-sm
+            }).join('') : '<tr><td colspan="6" class="text-center py-4 text-gray-500">ไม่พบหัวข้องาน</td></tr>'; // colspan changed to 6
+
+            renderClassSubmissions(); // Initial render for class submissions
+            Swal.close();
+        } catch (error) {
+            Swal.fire('ข้อผิดพลาด', `โหลดข้อมูลนักเรียนไม่สำเร็จ: ${error.message}`, 'error');
+        }
+    }
+
+    // --- SUBMISSION LOGIC (Req 2) ---
+    fileUpload.addEventListener('change', async e => {
+        if (e.target.files.length > 3) { Swal.fire('แจ้งเตือน', 'อัปโหลดได้ไม่เกิน 3 ไฟล์', 'warning'); e.target.value = ''; return; }
+        base64Files = []; filePreview.innerHTML = '';
+        if (e.target.files.length === 0) return;
+
+        // --- START MODIFICATION: Add verification logic ---
+        // 1. Disable submit button to prevent submission during processing
+        submitWorkBtn.disabled = true;
+        submitWorkBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> กำลังประมวลผล...';
+        // --- END MODIFICATION ---
+
+        Swal.fire({ title:'กำลังประมวลผลไฟล์...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+
+        const promises = Array.from(e.target.files).map((file, index) => new Promise((resolve, reject) => { // --- MODIFIED: Added 'index'
+            const reader = new FileReader();
+            reader.onerror = reject;
+            reader.onload = event => {
+                
+                // --- START: New File Rename Logic ---
+                // 1. Check if studentId is available for naming
+                if (!currentUser || !currentUser.studentId) {
+                    reject(new Error('ไม่พบข้อมูลนักเรียน (studentId) กรุณาค้นหาชื่อตนเองอีกครั้งก่อนอัปโหลดไฟล์'));
+                    return;
+                }
+                
+                // 2. Get file extension
+                const extensionMatch = file.name.match(/\.([^.]+)$/);
+                const extension = extensionMatch ? extensionMatch[1] : 'dat'; // e.g., "jpg"
+                
+                // 3. Create new unique, short filename
+                // Format: [studentId]_[timestamp]_[fileIndex].[extension]
+                const newFileName = `${currentUser.studentId}_${Date.now()}_${index}.${extension}`;
+                // --- END: New File Rename Logic ---
+
+                const data = { name: newFileName, type: file.type, base64: '' }; // --- MODIFIED: Use newFileName
+                
+                // Default HTML for non-image files
+                let html = `<div class="p-2 border rounded-lg bg-gray-50 text-sm"><p class="font-medium truncate">${newFileName}</p><p class="text-gray-500">${(file.size/1024).toFixed(2)} KB</p></div>`; // --- MODIFIED: Use newFileName
+
+                if (file.type.startsWith('image/')) {
+                    const img = new Image();
+                    img.onerror = reject;
+                    img.onload = () => {
+                        // --- CHANGED (Req 2): Resize to 1100x1100 ---
+                        const canvas = document.createElement('canvas'), MAX_W=1100, MAX_H=1100;
+                        let {width:w, height:h} = img;
+                        if (w > h) { if(w > MAX_W) { h *= MAX_W/w; w=MAX_W; } } else { if(h > MAX_H) { w *= MAX_H/h; h=MAX_H; } }
+                        canvas.width=w; canvas.height=h;
+                        canvas.getContext('2d').drawImage(img,0,0,w,h);
+                        
+                        const resizedDataUrl = canvas.toDataURL(file.type); // Get resized URL
+                        data.base64 = resizedDataUrl.split(',')[1];
+                        
+                        // --- CHANGED (Req 2): Update HTML to show image preview ---
+                        html = `<div class="p-2 border rounded-lg bg-gray-50 text-sm text-center">
+                                    <img src="${resizedDataUrl}" alt="Preview" class="h-24 w-auto mx-auto object-cover rounded mb-2">
+                                    <p class="font-medium truncate">${newFileName}</p> <!-- --- MODIFIED: Use newFileName --- -->
+                                    <p class="text-gray-500 text-xs">${(file.size/1024).toFixed(2)} KB (resized)</p>
+                                </div>`;
+                        
+                        resolve({data, html});
+                    };
+                    img.src = event.target.result;
+                } else {
+                    // For non-image files, just get base64
+                    data.base64 = event.target.result.split(',')[1];
+                    resolve({data, html}); // Resolve with default HTML
+                }
+            };
+            reader.readAsDataURL(file);
+        }));
+        try {
+            const results = await Promise.all(promises);
+            base64Files = results.map(r=>r.data);
+            filePreview.innerHTML = results.map(r=>r.html).join('');
+            Swal.close();
+            
+            // --- START MODIFICATION: Re-enable submit button on success ---
+            submitWorkBtn.disabled = false;
+            submitWorkBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>ส่งงาน';
+            // --- END MODIFICATION ---
+            
+        } catch (error) {
+            Swal.fire('ผิดพลาด', `ไม่สามารถประมวลผลไฟล์ได้: ${error.message}`, 'error'); // --- MODIFIED: Show specific error
+            e.target.value = ''; base64Files = []; filePreview.innerHTML = '';
+            
+            // --- START MODIFICATION: Re-enable submit button on error ---
+            submitWorkBtn.disabled = false;
+            submitWorkBtn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>ส่งงาน';
+            // --- END MODIFICATION ---
+        }
+    });
+
+    submitWorkBtn.addEventListener('click', async () => {
+        const assignmentId = assignmentSelect.value, link = linkUpload.value.trim();
+        if (!currentUser || !assignmentId) { Swal.fire('ข้อมูลไม่ครบ', 'กรุณาเลือกหัวข้องาน', 'warning'); return; }
+        if (base64Files.length === 0 && !link) { Swal.fire('ข้อมูลไม่ครบ', 'กรุณาอัปโหลดไฟล์หรือแนบลิงค์', 'warning'); return; }
+        if (link && !isValidUrl(link)) { Swal.fire('ลิงค์ไม่ถูกต้อง', 'กรุณาตรวจสอบรูปแบบ URL', 'error'); return; }
+
+        Swal.fire({ title: 'กำลังส่งงาน...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        const payload = { studentId: currentUser.studentId, assignmentId, link };
+        base64Files.forEach((file, i) => { payload[`file${i+1}_name`]=file.name; payload[`file${i+1}_type`]=file.type; payload[`file${i+1}_base64`]=file.base64; });
+        try {
+            await apiCall('submitWork', payload);
+            Swal.fire('ส่งงานสำเร็จ!', 'ข้อมูลถูกบันทึกเรียบร้อย', 'success');
+            fileUpload.value=''; linkUpload.value=''; filePreview.innerHTML='';
+            base64Files=[]; assignmentSelect.value='';
+            setTimeout(() => loadStudentData(), 1000); 
+        } catch (error) {
+            Swal.fire('ผิดพลาด', `ส่งงานไม่สำเร็จ: ${error.message}`, 'error');
+        }
+    });
+
+    // --- ADMIN & STUDENT TABS ---
+    adminTabs.addEventListener('click', e => {
+        if (e.target.tagName !== 'BUTTON') return;
+        adminTabs.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        tabPanels.forEach(p => p.classList.add('hidden'));
+        const targetPanelId = e.target.dataset.target;
+        e.target.classList.add('active');
+        document.getElementById(targetPanelId).classList.remove('hidden');
+
+        if (targetPanelId === 'student-list-panel' && allStudentsCache.length === 0) {
+            loadAllStudents();
+        }
+        // NEW: Also load student cache if opening the new report tab
+        if (targetPanelId === 'student-report-panel') {
+            if (allStudentsCache.length === 0) {
+                // We must *wait* for students to load before loading the report
+                Swal.fire({ title:'กำลังโหลด...', didOpen:()=>Swal.showLoading() });
+                loadAllStudents().then(() => {
+                    // Only load report if it's also empty
+                    if (currentStudentReportData.students.length === 0) {
+                        loadStudentReportData(); // This will close the Swal
+                    } else {
+                        Swal.close();
+                    }
+                });
+            } else if (currentStudentReportData.students.length === 0) {
+                // Students are cached, just load the report
+                loadStudentReportData();
+            }
+        }
+    });
+
+    studentSubmissionsTabs.addEventListener('click', e => {
+        if (e.target.tagName !== 'BUTTON') return;
+        studentSubmissionsTabs.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        studentTabPanels.forEach(p => p.classList.add('hidden'));
+        e.target.classList.add('active');
+        document.getElementById(e.target.dataset.target).classList.remove('hidden');
+    });
+
+    // --- ADMIN FUNCTIONS ---
+    addStudentForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        Swal.fire({ title:'กำลังบันทึก...', didOpen:()=>Swal.showLoading() });
+        try {
+            await apiCall('addStudent', Object.fromEntries(new FormData(e.target).entries()));
+            Swal.fire('สำเร็จ', 'เพิ่มข้อมูลนักเรียนแล้ว', 'success'); e.target.reset();
+            allStudentsCache = []; // Clear cache
+        } catch (error) { Swal.fire('ผิดพลาด', error.message, 'error'); }
+    });
+    
+    bulkUploadBtn.addEventListener('click', () => {
+        const file = bulkStudentUpload.files[0];
+        if (!file) {
+            Swal.fire('ผิดพลาด', 'กรุณาเลือกไฟล์ .csv ก่อน', 'warning');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+            const csv = event.target.result;
+            const lines = csv.split(/\r\n|\n/).filter(line => line.trim() !== '');
+            const students = [];
+            try {
+                // Start from line 0 if there's no header, or 1 if there is
+                for (let i = 0; i < lines.length; i++) {
+                    const values = lines[i].split(',').map(v => v.trim());
+                    if (values.length !== 6) throw new Error(`ข้อมูลแถวที่ ${i + 1} ไม่ถูกต้อง (ต้องมี 6 คอลัมน์)`);
+                    const [studentId, title, firstName, lastName, grade, studentClass] = values;
+                    if (!studentId || !title || !firstName || !lastName || !grade || !studentClass) {
+                        throw new Error(`ข้อมูลแถวที่ ${i + 1} ไม่สมบูรณ์`);
+                    }
+                    students.push({ studentId, title, firstName, lastName, grade, class: studentClass });
+                }
+
+                if (students.length === 0) {
+                    Swal.fire('ข้อมูลว่าง', 'ไม่พบข้อมูลนักเรียนในไฟล์ CSV', 'info');
+                    return;
+                }
+
+                Swal.fire({ title: `กำลังนำเข้า ${students.length} รายการ...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                await apiCall('addStudentsBulk', { students });
+                Swal.fire('สำเร็จ!', `นำเข้าข้อมูลนักเรียน ${students.length} รายการเรียบร้อย`, 'success');
+                bulkStudentUpload.value = '';
+                allStudentsCache = []; // Clear cache
+            } catch (error) {
+                Swal.fire('รูปแบบไฟล์ผิดพลาด', error.message, 'error');
+            }
+        };
+        reader.onerror = () => Swal.fire('ผิดพลาด', 'ไม่สามารถอ่านไฟล์ได้', 'error');
+        reader.readAsText(file, 'UTF-8'); // Specify UTF-8 encoding for Thai characters
+    });
+
+    async function loadAdminAssignments() {
+        const grade = document.getElementById('admin-grade-select').value;
+        if (!grade) { Swal.fire('กรุณาเลือก', 'โปรดเลือกระดับชั้นก่อน', 'info'); return; }
+        Swal.fire({ title:'กำลังโหลด...', didOpen:()=>Swal.showLoading() });
+        try {
+            const { data: assignments } = await apiCall('getAssignments', { grade });
+            adminAssignmentsTable.innerHTML = assignments && assignments.length > 0 ? assignments.map((a, i) => `
+                <tr class="border-t" data-id="${a.id}">
+                    <td class="text-center">${i+1}</td>
+                    <td><input class="w-full p-1 border rounded topic-input" value="${a.topic}" disabled></td>
+                    <td><input type="number" class="w-24 p-1 border rounded score-input" value="${a.fullScore||100}" disabled></td>
+                    <td class="flex gap-2">
+                        <button class="edit-assignment-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button>
+                        <button class="save-assignment-btn text-green-500 hover:text-green-700 hidden"><i class="fas fa-save"></i></button>
+                        <button class="delete-assignment-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`).join('') : '<tr><td colspan="4" class="text-center py-4">ไม่พบหัวข้องาน</td></tr>';
+        } catch (error) { Swal.fire('ผิดพลาด', `โหลดหัวข้องานไม่สำเร็จ: ${error.message}`, 'error'); } 
+        finally { Swal.close(); }
+    }
+    
+    adminSearchAssignmentsBtn.addEventListener('click', loadAdminAssignments);
+    
+    addAssignmentBtn.addEventListener('click', async () => {
+        const topic = document.getElementById('new-assignment-topic').value.trim();
+        const fullScore = document.getElementById('new-assignment-score').value;
+        const grade = document.getElementById('admin-grade-select').value;
+        if (!topic || !fullScore || !grade) { Swal.fire('ข้อมูลไม่ครบ', 'กรุณาเลือกชั้น กรอกหัวข้อ และคะแนนเต็ม', 'warning'); return; }
+        Swal.fire({ title: 'กำลังเพิ่ม...', didOpen: () => Swal.showLoading() });
+        try {
+            await apiCall('addAssignment', { topic, grade, fullScore });
+            Swal.fire('สำเร็จ', 'เพิ่มหัวข้องานแล้ว', 'success');
+            document.getElementById('new-assignment-topic').value = '';
+            document.getElementById('new-assignment-score').value = '';
+            await loadAdminAssignments();
+        } catch(error) { Swal.fire('ผิดพลาด', `เพิ่มหัวข้องานไม่สำเร็จ: ${error.message}`, 'error'); }
+    });
+
+    adminAssignmentsTable.addEventListener('click', async e => {
+        const btn = e.target.closest('button'); if (!btn) return;
+        const row = btn.closest('tr'), id=row.dataset.id;
+        const topicIn=row.querySelector('.topic-input'), scoreIn=row.querySelector('.score-input');
+        if (btn.classList.contains('edit-assignment-btn')) {
+            topicIn.disabled=false; scoreIn.disabled=false; topicIn.focus();
+            btn.classList.add('hidden'); row.querySelector('.save-assignment-btn').classList.remove('hidden');
+        } else if (btn.classList.contains('save-assignment-btn')) {
+            Swal.fire({ title:'กำลังบันทึก...', didOpen:()=>Swal.showLoading() });
+            try {
+                await apiCall('editAssignment', { id, topic: topicIn.value.trim(), fullScore: scoreIn.value });
+                topicIn.disabled=true; scoreIn.disabled=true;
+                btn.classList.add('hidden'); row.querySelector('.edit-assignment-btn').classList.remove('hidden');
+                Swal.fire('สำเร็จ', 'บันทึกแล้ว', 'success');
+            } catch (error) { Swal.fire('ผิดพลาด', `บันทึกไม่สำเร็จ: ${error.message}`, 'error'); }
+        } else if (btn.classList.contains('delete-assignment-btn')) {
+            const { isConfirmed } = await Swal.fire({ title:'ยืนันการลบ?', text:"ข้อมูลจะถูกลบถาวร!", icon:'warning', showCancelButton:true, confirmButtonColor:'#d33', confirmButtonText:'ใช่, ลบเลย!', cancelButtonText:'ยกเลิก' });
+            if (isConfirmed) {
+                Swal.fire({ title:'กำลังลบ...', didOpen:()=>Swal.showLoading() });
+                try {
+                    await apiCall('deleteAssignment', { id });
+                    Swal.fire('ลบแล้ว!', 'ข้อมูลถูกลบ', 'success'); row.remove();
+                } catch (error) { Swal.fire('ผิดพลาด', `ลบไม่สำเร็จ: ${error.message}`, 'error'); }
+            }
+        }
+    });
+
+    // --- Student List Tab ---
+    async function loadAllStudents() {
+        Swal.fire({ title:'กำลังโหลดรายชื่อ...', didOpen:()=>Swal.showLoading() });
+        try {
+            const { data: students } = await apiCall('getStudents');
+            allStudentsCache = students || [];
+            renderStudentList();
+        } catch (error) {
+            Swal.fire('ผิดพลาด', `ไม่สามารถโหลดรายชื่อนักเรียนได้: ${error.message}`, 'error');
+        } finally {
+            Swal.close();
+        }
+    }
+
+    function renderStudentList() {
+        const gradeFilter = studentListGradeFilter.value;
+        const classFilter = studentListClassFilter.value;
+
+        let filteredStudents = allStudentsCache;
+
+        if (gradeFilter !== 'all') {
+            filteredStudents = filteredStudents.filter(s => s.grade === gradeFilter);
+        }
+        if (classFilter !== 'all') {
+             filteredStudents = filteredStudents.filter(s => s.class.toString() === classFilter);
+        }
+
+        filteredStudents.sort((a,b) => (a.grade.localeCompare(b.grade)) || (a.class - b.class) || (a.studentId - b.studentId));
+
+        studentListTable.innerHTML = filteredStudents.length > 0
+            ? filteredStudents.map(s => `
+                <tr class="border-t" data-student-id="${s.studentId}">
+                    <td>${s.studentId}</td>
+                    <td>${s.title}</td>
+                    <td>${s.firstName}</td>
+                    <td>${s.lastName}</td>
+                    <td>${s.grade}</td>
+                    <td>${s.class}</td>
+                    <td class="flex items-center gap-2">
+                        <button class="edit-student-btn text-blue-500 hover:text-blue-700" title="แก้ไข"><i class="fas fa-edit"></i></button>
+                        <button class="delete-student-btn text-red-500 hover:text-red-700" title="ลบ"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`).join('')
+            : '<tr><td colspan="7" class="text-center py-4 text-gray-500">ไม่พบข้อมูลนักเรียน</td></tr>';
+    }
+
+    studentListGradeFilter.addEventListener('change', async () => {
+        const selectedGrade = studentListGradeFilter.value;
+        studentListClassFilter.innerHTML = '<option value="all">-- ทุกห้อง --</option>'; // Reset
+        
+        if (selectedGrade === 'all') {
+            studentListClassFilter.disabled = true;
+        } else {
+            studentListClassFilter.disabled = true; // Disable while loading
+            try {
+                // Fetch classes only for the selected grade
+                const { data: classes } = await apiCall('getClassesForGrade', { grade: selectedGrade });
+                if (classes && classes.length > 0) {
+                    classes.forEach(c => {
+                        studentListClassFilter.innerHTML += `<option value="${c}">${c}</option>`;
+                    });
+                    studentListClassFilter.disabled = false;
+                }
+            } catch (error) {
+                console.error("Could not fetch classes for grade filter:", error);
+            }
+        }
+        renderStudentList();
+    });
+    studentListClassFilter.addEventListener('change', renderStudentList);
+
+    studentListTable.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+
+        const row = btn.closest('tr');
+        const studentId = row.dataset.studentId;
+        const student = allStudentsCache.find(s => s.studentId.toString() === studentId);
+
+        if (btn.classList.contains('edit-student-btn')) {
+            const { value: formValues } = await Swal.fire({
+                title: '✏️ แก้ไขข้อมูลนักเรียน',
+                html: `
+                    <div class="p-2 space-y-4 text-left">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="swal-id" class="swal-form-label">🆔 เลขประจำตัว</label>
+                                <input id="swal-id" class="swal-form-input" value="${student.studentId}" readonly>
+                            </div>
+                            <div>
+                                <label for="swal-title" class="swal-form-label">👑 คำนำหน้า</label>
+                                <select id="swal-title" class="swal-form-input">
+                                    <option value="นาย" ${student.title === 'นาย' ? 'selected' : ''}>นาย</option>
+                                    <option value="นางสาว" ${student.title === 'นางสาว' ? 'selected' : ''}>นางสาว</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="swal-firstname" class="swal-form-label">🧑‍🎓 ชื่อ</label>
+                                <input id="swal-firstname" class="swal-form-input" value="${student.firstName}" placeholder="ชื่อ">
+                            </div>
+                            <div>
+                                <label for="swal-lastname" class="swal-form-label">🧑‍🎓 นามสกุล</label>
+                                <input id="swal-lastname" class="swal-form-input" value="${student.lastName}" placeholder="นามสกุล">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="swal-grade" class="swal-form-label">🏫 ระดับชั้น</label>
+                                <select id="swal-grade" class="swal-form-input">
+                                    <option value="ม.4" ${student.grade === 'ม.4' ? 'selected' : ''}>ม.4</option>
+                                    <option value="ม.5" ${student.grade === 'ม.5' ? 'selected' : ''}>ม.5</option>
+                                    <option value="ม.6" ${student.grade === 'ม.6' ? 'selected' : ''}>ม.6</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="swal-class" class="swal-form-label">🚪 ห้อง</label>
+                                <input id="swal-class" type="number" class="swal-form-input" value="${student.class}" placeholder="ห้อง">
+                            </div>
+                        </div>
+                    </div>
+                `,
+                width: '42rem',
+                focusConfirm: false,
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-save mr-2"></i>บันทึก',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#2563eb',
+                preConfirm: () => {
+                    const data = {
+                        studentId: document.getElementById('swal-id').value,
+                        title: document.getElementById('swal-title').value,
+                        firstName: document.getElementById('swal-firstname').value,
+                        lastName: document.getElementById('swal-lastname').value,
+                        grade: document.getElementById('swal-grade').value,
+                        class: document.getElementById('swal-class').value,
+                    };
+                    if (!data.firstName || !data.lastName || !data.class) {
+                        Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+                        return false;
+                    }
+                    return data;
+                }
+            });
+
+            if (formValues) {
+                Swal.fire({ title: 'กำลังบันทึก...', didOpen: () => Swal.showLoading() });
+                try {
+                    await apiCall('editStudent', formValues);
+                    Swal.fire('สำเร็จ!', 'แก้ไขข้อมูลนักเรียนเรียบร้อย', 'success');
+                    allStudentsCache = []; // Clear cache to force reload
+                    loadAllStudents();
+                } catch (error) {
+                    Swal.fire('ผิดพลาด', `ไม่สามารถแก้ไขข้อมูลได้: ${error.message}`, 'error');
+                }
+            }
+        } else if (btn.classList.contains('delete-student-btn')) {
+            const { isConfirmed } = await Swal.fire({
+                title: 'ยืนยันการลบ?',
+                html: `คุณต้องการลบข้อมูลของ <br><b>${student.title}${student.firstName} ${student.lastName}</b> ใช่หรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก'
+            });
+
+            if (isConfirmed) {
+                Swal.fire({ title: 'กำลังลบ...', didOpen: () => Swal.showLoading() });
+                try {
+                    await apiCall('deleteStudent', { studentId });
+                    Swal.fire('ลบแล้ว!', 'ข้อมูลนักเรียนถูกลบเรียบร้อย', 'success');
+                    allStudentsCache = []; // Clear cache
+                    loadAllStudents();
+                } catch (error) {
+                    Swal.fire('ผิดพลาด', `ไม่สามารถลบข้อมูลได้: ${error.message}`, 'error');
+                }
+            }
+        }
+    });
+    
+    // --- NEW (Req 2) ---
+    mySubmissionsTable.addEventListener('click', e => {
+        const btn = e.target.closest('.toggle-images-btn');
+        if (!btn) return;
+        
+        // --- FIX: Change from nextElementSibling to parentElement.querySelector ---
+        const imageContainer = btn.parentElement.querySelector('.submission-images');
+        
+        if (imageContainer) {
+            imageContainer.classList.toggle('hidden');
+            
+            // --- MODIFIED (Req 1): No need to change innerHTML for emoji-only button ---
+            // const isHidden = imageContainer.classList.contains('hidden');
+            // const count = imageContainer.querySelectorAll('a').length; // Count the links/images
+            // btn.innerHTML = isHidden ? `🖼️ แสดง (${count})` : `🖼️ ซ่อน (${count})`;
+            // --- END MODIFIED ---
+        }
+    });
+    // --- END NEW ---
+    
+    // --- NEW: Student Report Modal ---
+    /**
+     * Shows a professional, detailed modal for a single student's submissions.
+     * @param {object} student - The student object
+     * @param {Array} studentSubmissions - Array of all submission objects for this student
+     * @param {Array} assignments - Array of all assignment objects for this student's grade
+     */
+    function showStudentReportModal(student, studentSubmissions, assignments) {
+        // 1. Calculate total scores again (for the modal header)
+        const finalSubmissionsMap = new Map();
+        const subsByAssignment = studentSubmissions.reduce((acc, sub) => (acc[sub.assignmentId] = [...(acc[sub.assignmentId] || []), sub], acc), {});
+        for (const assignmentId in subsByAssignment) {
+            const group = subsByAssignment[assignmentId];
+            const graded = group.filter(s => s.status === 'ตรวจแล้ว');
+            if (graded.length > 0) {
+                graded.sort((a, b) => (parseInt(b.score,10)||0) - (parseInt(a.score,10)||0));
+                finalSubmissionsMap.set(assignmentId, graded[0]);
+            } else {
+                group.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                finalSubmissionsMap.set(assignmentId, group[0]);
+            }
+        }
+        let totalScored = 0;
+        finalSubmissionsMap.forEach(sub => {
+            if (sub.status === 'ตรวจแล้ว' && sub.score) {
+                totalScored += (parseInt(sub.score, 10) || 0);
+            }
+        });
+        const totalFullScoreForGrade = assignments.reduce((acc, a) => acc + (parseInt(a.fullScore, 10) || 0), 0);
+
+        // 2. Generate the HTML for *each* assignment
+        const assignmentsHtml = assignments.map((assignment, index) => {
+            const sub = finalSubmissionsMap.get(assignment.id); // Get the "best" submission for this assignment
+            
+            // --- MODIFICATION ---
+            // Replaced the grid layout with the cleaner "📝" modal layout
+            const itemClass = `p-4 ${index > 0 ? 'border-t border-gray-200' : ''}`;
+
+            if (sub) {
+                // --- THIS ASSIGNMENT HAS A SUBMISSION ---
+                // We reuse the "📝" modal's HTML structure
+                
+                // 1. Get files and link (like in the "📝" modal)
+                const files = sub.files || [];
+                const linkHtml_sub = sub.link ? `
+                    <div>
+                        <h4 class="text-md font-semibold text-gray-800 mb-1">🔗 ลิงก์ที่แนบ</h4>
+                        <a href="${sub.link}" target="_blank" class="text-blue-600 hover:underline break-all">${sub.link}</a>
+                    </div>` : '';
+                const filesHtml_sub = files.length > 0 ? `
+                    <div>
+                        <h4 class="text-md font-semibold text-gray-800 ${sub.link ? 'mt-4' : ''} mb-2">📁 ไฟล์และรูปภาพ</h4>
+                        <div class="flex flex-wrap gap-3">
+                            ${files.map(f => renderFileLink(f, true)).join('')} 
+                        </div>
+                    </div>` : '';
+
+                // 2. Get status and score
+                const statusHtml = renderStatus(sub.status);
+                const scoreHtml = sub.status === 'ตรวจแล้ว' 
+                    ? `<span class="font-bold text-lg ${sub.score >= (parseInt(assignment.fullScore,10)||0) / 2 ? 'text-green-600' : 'text-red-600'}">${sub.score || 0}</span> / ${assignment.fullScore || 100}`
+                    : `<span class="text-gray-400">- / ${assignment.fullScore || 100}</span>`;
+
+                // 3. Build the HTML block for this submitted assignment
+                return `
+                    <div class="${itemClass}">
+                        <!-- Header (from 📝 modal) -->
+                        <p class="text-lg font-semibold text-gray-700">${assignment.topic}</p>
+                        <p class="text-sm text-gray-500 mb-2">ส่งเมื่อ: ${formatTimestamp(sub.timestamp)}</p>
+                        
+                        <!-- Status and Score (from 📈 modal, but cleaner) -->
+                        <div class="flex items-center gap-6 mb-4">
+                            <div>
+                                <p class="text-xs font-medium text-gray-500">สถานะ</p>
+                                <p class="text-sm">${statusHtml}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-medium text-gray-500">คะแนน</p>
+                                <p class="text-sm">${scoreHtml}</p>
+                            </div>
+                        </div>
+
+                        <!-- Files/Link (from 📝 modal) -->
+                        <div class="space-y-4">
+                            ${linkHtml_sub}
+                            ${filesHtml_sub}
+                        </div>
+                        ${!linkHtml_sub && !filesHtml_sub ? '<p class="text-sm text-gray-400">(ไม่พบไฟล์หรือลิงก์ที่แนบ)</p>' : ''}
+                    </div>
+                `;
+
+            } else {
+                // --- THIS ASSIGNMENT WAS NOT SUBMITTED ---
+                // Show a simplified "Not Submitted" block
+                return `
+                    <div class="${itemClass}">
+                        <p class="text-lg font-semibold text-gray-400">${assignment.topic}</p>
+                        <div class="flex items-center gap-6 mt-2">
+                             <div>
+                                <p class="text-xs font-medium text-gray-500">สถานะ</p>
+                                <p class="text-sm">${renderStatus('ยังไม่ส่ง')}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-medium text-gray-500">คะแนน</p>
+                                <p class="text-sm"><span class="text-gray-400">- / ${assignment.fullScore || 100}</span></p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }).join('');
+        // --- END MODIFICATION ---
+
+        // 3. Show the modal
+        Swal.fire({
+            // --- START MODIFICATION: Align modal width ---
+            width: '40rem', // Changed from '90%' and 'maxWidth: 800px' to match 'ตรวจงาน' modal
+            // --- END MODIFICATION ---
+            showCloseButton: true,
+            confirmButtonText: 'ปิด',
+            html: `
+                <div class="text-left p-4">
+                    <!-- Header -->
+                    <div class="mb-4">
+                        <h2 class="text-xl sm:text-2xl font-bold text-blue-700">${student.title}${student.firstName} ${student.lastName}</h2> <!-- MODIFIED: Responsive font size -->
+                        <p class="text-sm sm:text-md text-gray-600">เลขประจำตัว: ${student.studentId} | ${student.grade}/${student.class}</p> <!-- MODIFIED: Responsive font size -->
+                    </div>
+                    
+                    <!-- Summary Score -->
+                    <div class="bg-blue-50 p-4 rounded-lg mb-4 text-center">
+                        <p class="text-sm font-medium text-blue-800">คะแนนรวม (ที่ตรวจแล้ว)</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-blue-600"> <!-- MODIFIED: Responsive font size -->
+                            ${totalScored} / ${totalFullScoreForGrade}
+                        </p>
+                    </div>
+
+                    <!-- Assignment List -->
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">รายละเอียดการส่งงาน</h3>
+                    
+                    <!-- MODIFICATION -->
+                    <!-- Removed space-y-3, p-2, bg-gray-50. Added border around the container -->
+                    <div class="max-h-[50vh] overflow-y-auto border border-gray-200 rounded-lg">
+                        ${assignmentsHtml || '<p class="text-center text-gray-500 p-4">ไม่พบหัวข้องานสำหรับระดับชั้นนี้</p>'}
+                    </div>
+                </div>
+            `,
+        });
+    }
+
+    // --- NEW: Student Report Tab Logic ---
+    async function loadStudentReportData() {
+        const grade = studentReportGradeFilter.value; // Will be "all" by default
+
+        Swal.fire({ title:'กำลังโหลดข้อมูล...', didOpen:()=>Swal.showLoading() });
+        try {
+            // NEW: Set API filter based on grade selection
+            const apiFilter = (grade === 'all') ? {} : { grade: grade };
+
+            // Fetch assignments and submissions
+            const [assignmentsResult, submissionsResult] = await Promise.all([
+                apiCall('getAssignments', apiFilter), // Use new filter
+                apiCall('getSubmissions', apiFilter)  // Use new filter
+            ]);
+            
+            // We already have students in allStudentsCache
+            const students = (grade === 'all')
+                ? allStudentsCache
+                : allStudentsCache.filter(s => s.grade === grade);
+
+            const assignments = assignmentsResult.data || [];
+            const submissions = submissionsResult.data || [];
+
+            // Store in our new state variable
+            currentStudentReportData = { students, assignments, submissions };
+
+            // Populate class filter (based on the students *for this grade*)
+            const classes = (grade === 'all')
+                ? [...new Set(allStudentsCache.map(s => s.class))].sort((a,b) => a - b) // All classes
+                : [...new Set(students.map(s => s.class))].sort((a,b) => a - b); // Filtered classes
+
+            studentReportClassFilter.innerHTML = '<option value="all">-- ทุกห้อง --</option>';
+            classes.forEach(c => {
+                studentReportClassFilter.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+            studentReportClassFilter.disabled = false;
+
+            // Render the table
+            renderStudentReportTable();
+            Swal.close();
+        } catch (error) {
+            Swal.fire('ผิดพลาด', `โหลดรายงานไม่สำเร็จ: ${error.message}`, 'error');
+        }
+    }
+
+    function renderStudentReportTable() {
+        const classFilter = studentReportClassFilter.value;
+        const { students, assignments, submissions } = currentStudentReportData;
+
+        // 1. Filter students by class
+        const filteredStudents = (classFilter === 'all')
+            ? students
+            : students.filter(s => s.class.toString() === classFilter);
+
+        // 2. Map students to table rows (REMOVED global full score calculation)
+        const tableHtml = filteredStudents.map(student => {
+            // NEW: Find relevant assignments *per student*
+            const relevantAssignments = assignments.filter(a => a.grade === student.grade);
+            
+            // NEW: Calculate total full score *for this student's grade*
+            const totalFullScoreForGrade = relevantAssignments.reduce((acc, a) => acc + (parseInt(a.fullScore, 10) || 0), 0);
+
+            // 3a. Find all submissions for this student
+            const studentSubmissions = submissions.filter(s => s.studentId === student.studentId);
+            
+            // 3b. Calculate *this student's* total score
+            // This requires finding the *best* score for each assignment, just like in loadStudentData
+            const finalSubmissionsMap = new Map();
+            const subsByAssignment = studentSubmissions.reduce((acc, sub) => (acc[sub.assignmentId] = [...(acc[sub.assignmentId] || []), sub], acc), {});
+            
+            for (const assignmentId in subsByAssignment) {
+                const group = subsByAssignment[assignmentId];
+                const graded = group.filter(s => s.status === 'ตรวจแล้ว');
+                if (graded.length > 0) {
+                    graded.sort((a, b) => (parseInt(b.score,10)||0) - (parseInt(a.score,10)||0));
+                    finalSubmissionsMap.set(assignmentId, graded[0]);
+                } else {
+                    // If no graded, we can still show the latest "pending"
+                    group.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    finalSubmissionsMap.set(assignmentId, group[0]);
+                }
+            }
+
+            // 3c. Sum the scores from the "best" submissions
+            let totalScored = 0;
+            finalSubmissionsMap.forEach(sub => {
+                if (sub.status === 'ตรวจแล้ว' && sub.score) {
+                    totalScored += (parseInt(sub.score, 10) || 0);
+                }
+            });
+
+            // 3d. Prep data for the modal button
+            const studentDataJson = JSON.stringify(student).replace(/"/g, '&quot;');
+            const studentSubmissionsJson = JSON.stringify(studentSubmissions).replace(/"/g, '&quot;'); // Pass *all* submissions
+            // USE THE NEW FILTERED LIST
+            const assignmentsJson = JSON.stringify(relevantAssignments).replace(/"/g, '&quot;'); 
+
+            return `
+                <tr class="border-t">
+                    <td>${student.studentId}</td>
+                    <td>${student.title}</td>
+                    <td>${student.firstName}</td>
+                    <td>${student.lastName}</td>
+                    <td>${student.grade}</td>
+                    <td>${student.class}</td>
+                    <td>
+                        <span class="score">${totalScored}</span> / <span class="full-score">${totalFullScoreForGrade}</span>
+                    </td>
+                    <td class="text-center">
+                        <button class="show-student-report-btn text-2xl text-blue-500 hover:text-blue-700" 
+                                title="ดูรายละเอียด"
+                                data-student='${studentDataJson}'
+                                data-submissions='${studentSubmissionsJson}'
+                                data-assignments='${assignmentsJson}'>
+                            📈
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        studentReportTable.innerHTML = tableHtml || '<tr><td colspan="8" class="text-center py-4 text-gray-500">ไม่พบข้อมูลนักเรียนตามตัวกรอง</td></tr>';
+    }
+
+    // --- Add listeners for the new tab ---
+    studentReportGradeFilter.addEventListener('change', loadStudentReportData);
+    studentReportClassFilter.addEventListener('change', renderStudentReportTable);
+    studentReportRefreshBtn.addEventListener('click', loadStudentReportData);
+
+    studentReportTable.addEventListener('click', e => {
+        const btn = e.target.closest('.show-student-report-btn');
+        if (btn) {
+            try {
+                // Parse the data from the button's data attributes
+                const student = JSON.parse(btn.dataset.student.replace(/&quot;/g, '"'));
+                const submissions = JSON.parse(btn.dataset.submissions.replace(/&quot;/g, '"'));
+                const assignments = JSON.parse(btn.dataset.assignments.replace(/&quot;/g, '"'));
+                // Call the new modal function
+                showStudentReportModal(student, submissions, assignments);
+            } catch (err) {
+                console.error("Error parsing modal data:", err);
+                Swal.fire('ผิดพลาด', 'ไม่สามารถโหลดข้อมูลสำหรับ Modal ได้', 'error');
+            }
+        }
+    });
+    // --- END NEW STUDENT REPORT TAB LOGIC ---
+
+    // --- ADMIN REPORT ---
+    function renderReportTable() {
+        const topicFilter = reportTopicFilter.value;
+        const classFilter = reportClassFilter.value;
+
+        const filteredSubmissions = currentReportData.submissions.filter(s => {
+            const topicMatch = topicFilter === 'all' || s.assignmentTopic === topicFilter;
+            const classMatch = classFilter === 'all' || s.studentClass.toString() === classFilter;
+            return topicMatch && classMatch;
+        });
+        
+        reportTable.innerHTML = filteredSubmissions.length > 0 ? filteredSubmissions.map(s => {
+            // --- MODIFIED (Req 2) ---
+            // We need to pass the whole submission object to the button
+            const submissionJson = JSON.stringify(s).replace(/"/g, '&quot;');
+            
+            return `
+                <tr class="border-t" data-id="${s.id}">
+                    <td>${s.studentName} (ห้อง ${s.studentClass})</td>
+                    <td>${s.assignmentTopic}</td>
+                    <!-- MODIFIED: เพิ่ม data-status และ onchange เพื่อเปลี่ยนสี -->
+                    <td>
+                        <select class="status-select p-1 w-full" 
+                                data-status="${s.status}" 
+                                onchange="this.dataset.status = this.value">
+                            <option value="รอตรวจ" ${s.status==='รอตรวจ'?'selected':''}>รอตรวจ</option>
+                            <option value="ตรวจแล้ว" ${s.status==='ตรวจแล้ว'?'selected':''}>ตรวจแล้ว</option>
+                            <option value="ส่งใหม่" ${s.status==='ส่งใหม่'?'selected':''}>ส่งใหม่</option>
+                        </select>
+                    </td>
+                    <!-- END MODIFIED -->
+                    <td><input type="number" min="0" max="${s.fullScore||100}" class="score-input w-16 p-1 border rounded" value="${s.score||''}"><span class="text-gray-500">/ ${s.fullScore||100}</span></td>
+                    <td class="text-center">
+                        <button class="show-details-btn text-xl p-2 rounded-lg hover:bg-gray-200 transition-colors" 
+                                title="ดูรายละเอียด" 
+                                data-submission="${submissionJson}">
+                            📝
+                        </button>
+                    </td>
+                    <td>${formatTimestamp(s.timestamp)}</td>
+                    <td class="flex items-center gap-2"><button class="save-grade-btn btn-primary px-3 py-1 rounded text-sm">บันทึก</button><button class="delete-submission-btn bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
+            // --- END MODIFIED ---
+        }).join('') : '<tr><td colspan="7" class="text-center py-4 text-gray-500">ไม่พบข้อมูลตามตัวกรอง</td></tr>';
+    }
+
+    reportSearchBtn.addEventListener('click', async () => {
+        const grade = document.getElementById('report-grade-select').value;
+        if (!grade) { Swal.fire('กรุณาเลือก', 'โปรดเลือกระดับชั้นก่อน', 'info'); return; }
+        Swal.fire({ title:'กำลังโหลดรายงาน...', didOpen:()=>Swal.showLoading() });
+        try {
+            // --- MODIFIED: Renamed 'submissions' to 'allSubmissions' ---
+            const [{data:allSubmissions}, {data:assignments}, {data:classes}] = await Promise.all([
+                apiCall('getSubmissions', { grade }),
+                apiCall('getAssignments', { grade }),
+                apiCall('getClassesForGrade', { grade })
+            ]);
+
+            // --- START: New logic to filter and delete orphaned submissions ---
+            const validAssignmentIds = new Set(assignments.map(a => a.id));
+            const validSubmissions = [];
+            const orphanedSubmissions = [];
+
+            (allSubmissions || []).forEach(sub => {
+                if (validAssignmentIds.has(sub.assignmentId)) {
+                    validSubmissions.push(sub);
+                } else {
+                    // This submission's assignment has been deleted
+                    orphanedSubmissions.push(sub);
+                }
+            });
+
+            // If orphans are found, delete them
+            if (orphanedSubmissions.length > 0) {
+                // Update the loading message
+                Swal.update({
+                    title: 'กำลังล้างข้อมูลเก่า...',
+                    text: `พบ ${orphanedSubmissions.length} รายการส่งงานที่หัวข้อถูกลบ... กำลังลบ...`
+                });
+
+                const deletePromises = orphanedSubmissions.map(sub =>
+                    apiCall('deleteSubmission', { id: sub.id })
+                        .catch(err => console.error(`Failed to delete orphaned submission ${sub.id}:`, err)) // Log error but don't stop
+                );
+                
+                await Promise.all(deletePromises);
+                
+                // Show a temporary success message before proceeding
+                await Swal.fire({
+                    title: 'ลบข้อมูลเก่าสำเร็จ',
+                    text: `ลบรายการส่งงาน ${orphanedSubmissions.length} รายการเรียบร้อย`,
+                    icon: 'success',
+                    timer: 2000, // Show for 2 seconds
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+            }
+            // --- END: New logic ---
+
+            // --- MODIFIED: Use 'validSubmissions' instead of 'allSubmissions' ---
+            currentReportData = { submissions: validSubmissions, assignments, classes };
+            
+            reportTopicFilter.innerHTML = `<option value="all">-- ทุกหัวข้อ --</option>` + assignments.map(a => `<option value="${a.topic}">${a.topic}</option>`).join('');
+            reportClassFilter.innerHTML = `<option value="all">-- ทุกห้อง --</option>` + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+            
+            renderReportTable();
+            Swal.close(); // Close the loading swal *after* everything is done
+
+        } catch (error) { 
+            Swal.fire('ผิดพลาด', `โหลดรายงานไม่สำเร็จ: ${error.message}`, 'error'); 
+        } 
+        // --- MODIFIED: Removed 'finally' block, Swal.close() is now at end of try block ---
+    });
+
+    [reportTopicFilter, reportClassFilter].forEach(el => el.addEventListener('change', renderReportTable));
+    
+    reportTable.addEventListener('click', async(e) => {
+        const btn = e.target.closest('button'); if (!btn) return;
+        const row = btn.closest('tr'), id = row.dataset.id;
+
+        if (btn.classList.contains('save-grade-btn')) {
+            Swal.fire({ title:'กำลังบันทึก...', didOpen:()=>Swal.showLoading() });
+            try {
+                const status = row.querySelector('.status-select').value;
+                const score = row.querySelector('.score-input').value;
+                await apiCall('updateSubmission', { id, status, score });
+                Swal.fire('สำเร็จ', 'บันทึกข้อมูลแล้ว', 'success');
+                btn.classList.replace('btn-primary', 'bg-green-500');
+                setTimeout(() => btn.classList.replace('bg-green-500', 'btn-primary'), 2000);
+            } catch(error) { Swal.fire('ผิดพลาด', `บันทึกไม่สำเร็จ: ${error.message}`, 'error'); }
+        } else if (btn.classList.contains('delete-submission-btn')) {
+            const { isConfirmed } = await Swal.fire({ title:'ยืนันการลบ?', text:"ข้อมูลการส่งงานนี้จะถูกลบถาวร!", icon:'warning', showCancelButton:true, confirmButtonColor:'#d33', confirmButtonText:'ใช่, ลบเลย!', cancelButtonText:'ยกเลิก' });
+            if (isConfirmed) {
+                Swal.fire({ title:'กำลังลบ...', didOpen:()=>Swal.showLoading() });
+                try {
+                    await apiCall('deleteSubmission', { id });
+                    Swal.fire('ลบแล้ว!', 'ข้อมูลถูกลบ', 'success'); row.remove();
+                } catch (error) { Swal.fire('ผิดพลาด', `ลบไม่สำเร็จ: ${error.message}`, 'error'); }
+            }
+        // --- MODIFIED (Req 3 & 4) ---
+        } else if (btn.classList.contains('show-details-btn')) {
+            // --- MODIFIED: Read data from button ---
+            const submissionJson = btn.dataset.submission;
+            if (!submissionJson) {
+                 Swal.fire('ผิดพลาด', 'ไม่พบข้อมูลในปุ่ม', 'error');
+                 return;
+            }
+            const submission = JSON.parse(submissionJson);
+            // --- END MODIFIED ---
+
+            if (!submission) {
+                Swal.fire('ผิดพลาด', 'ไม่พบข้อมูลการส่งงาน', 'error');
+                return;
+            }
+
+            // Reuse renderFileLink, set 'isForImageList' to true for professional thumbnails
+            const files = submission.files || [];
+            const linkHtml = submission.link ? `
+                <div>
+                    <h4 class="text-md font-semibold text-gray-800 mb-1">🔗 ลิงก์ที่แนบ</h4>
+                    <a href="${submission.link}" target="_blank" class="text-blue-600 hover:underline break-all">${submission.link}</a>
+                </div>` : '';
+
+            // Use the professional image list style (isForImageList = true)
+            const filesHtml = files.length > 0 ? `
+                <div>
+                    <h4 class="text-md font-semibold text-gray-800 ${submission.link ? 'mt-4' : ''} mb-2">📁 ไฟล์และรูปภาพ</h4>
+                    <div class="flex flex-wrap gap-3">
+                        ${files.map(f => renderFileLink(f, true)).join('')} 
+                    </div>
+                </div>` : '';
+
+            Swal.fire({
+                title: 'รายละเอียดการส่งงาน',
+                html: `
+                    <div class="text-left p-2 md:p-4">
+                        <h3 class="text-xl md:text-2xl font-bold text-blue-600 mb-2">${submission.studentName}</h3>
+                        <p class="text-lg font-semibold text-gray-700">${submission.assignmentTopic}</p>
+                        <p class="text-sm text-gray-500 mb-4">ส่งเมื่อ: ${formatTimestamp(submission.timestamp)} (ห้อง ${submission.studentClass})</p>
+                        
+                        <hr class="my-4">
+
+                        <div class="space-y-4">
+                            ${linkHtml}
+                            ${filesHtml}
+                        </div>
+                        ${!linkHtml && !filesHtml ? '<p class="text-center text-gray-500">ไม่พบไฟล์หรือลิงก์ที่แนบ</p>' : ''}
+                    </div>
+                `,
+                width: '40rem',
+                confirmButtonText: 'ปิด',
+            });
+        }
+        // --- END MODIFIED ---
+    });
+
+    printReportBtn.addEventListener('click', () => {
+        const grade = document.getElementById('report-grade-select').value;
+        const topic = reportTopicFilter.options[reportTopicFilter.selectedIndex].text;
+        const studentClass = reportClassFilter.value;
+        
+        const tableClone = document.getElementById('report-table').closest('table').cloneNode(true);
+        tableClone.querySelectorAll('tr').forEach(row => {
+            if(row.cells.length > 1) { // to avoid error on header row if it's structured differently
+                row.deleteCell(-1); // Remove Manage column
+                
+                // --- MODIFIED (Req 1 & 2): Simplify 'Details' column for printing ---
+                const detailsCell = row.cells[4]; // The 'Details' column
+                if (detailsCell) {
+                    detailsCell.innerHTML = '<span class="text-xs text-gray-500">(ดูในระบบ)</span>';
+                    detailsCell.style.textAlign = 'center';
+                }
+                // --- END MODIFIED ---
+            }
+        });
+
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>รายงานการส่งงาน</title>
+                    <script src="https://cdn.tailwindcss.com"><\/script>
+                    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+                    <style>
+                        body { font-family: 'Sarabun', sans-serif; padding: 1rem; }
+                        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+                        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                        h1, h2, p { text-align: center; }
+                        a { text-decoration: none; color: black; }
+                        @media print {
+                            body { -webkit-print-color-adjust: exact; }
+                            button { display: none; }
+                            a { text-decoration: none !important; color: #000 !important; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>รายงานการส่งงาน</h1>
+                    <h2>โรงเรียนตระกาศประชาสามัคคี อ.กันทรลักษ์ จังหวัดศรีสะเกษ</h2>
+                    <p style="text-align: center; margin-bottom: 1rem;">
+                        <strong>ระดับชั้น:</strong> ${grade || 'ทั้งหมด'} | 
+                        <strong>หัวข้อ:</strong> ${topic} | 
+                        <strong>ห้อง:</strong> ${studentClass === 'all' ? 'ทุกห้อง' : studentClass}
+                    </p>
+                    ${tableClone.outerHTML}
+                </body>
+            </html>
+        `);
+        
+        printWindow.document.close();
+        
+        setTimeout(() => {
+            printWindow.focus();
+            printWindow.print();
+            printWindow.close();
+        }, 1000);
+    });
+
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
